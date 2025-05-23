@@ -3,6 +3,7 @@ import { Player } from "./player";
 import getRandomBullets from "./utils/getRandomBullets";
 import { Serializable } from "./utils/serializable";
 import { v4 as uuidv4 } from "uuid";
+import type { IOType, SocketType } from "../types";
 
 export class GameState implements Serializable {
     private gameId: string;
@@ -15,20 +16,25 @@ export class GameState implements Serializable {
     private allPlayers: Map<string, Player>;
     private isStarted = false;
     private isSkipActive = false;
-    private socket: any;
+    private io: IOType;
 
-    constructor(socket: any) {
+    constructor(io: IOType) {
         this.gameId = uuidv4();
         this.gameRound = 1;
         this.bullets = getRandomBullets();
         this.currentBulletIndex = 0;
         this.allPlayers = new Map<string, Player>();
+        this.allPlayerIdArr = [];
         this.currentActivePlayerId = "";
-        this.socket = socket;
+        this.io = io;
     }
     public getGameId() {
         return this.gameId;
     }
+    public isGameFull() {
+        return this.allPlayers.size >= 2;
+    }
+
     public getCurrentGameRound() {
         return this.gameRound;
     }
@@ -39,6 +45,7 @@ export class GameState implements Serializable {
         if (this.allPlayers.size < 2) {
             throw new Error("Not enough players");
         }
+        this.io.to(this.gameId).emit("start_match", this.serialize());
         this.isStarted = true;
     }
     public resetRound() {
@@ -54,19 +61,19 @@ export class GameState implements Serializable {
             .get(this.allPlayerIdArr[this.currentActivePlayerIndex])!
             .getId();
     }
-    public serialize(): string {
-        const allPlayersArray: string[] = [];
+    public serialize() {
+        const allPlayersArray: any[] = [];
         for (const [_, player] of this.allPlayers) {
             allPlayersArray.push(player.serialize());
         }
-        return JSON.stringify({
+        return {
             gameRound: this.gameRound,
             currentPlayerId: this.currentActivePlayerId,
             allPlayers: allPlayersArray,
-        });
+        };
     }
     public checkGameOver(): boolean {
-        if (this.allPlayers.size === 1) return true;
+        if (this.allPlayers.size <= 1) return true;
         return false;
     }
     public isRoundActive(): boolean {
@@ -107,6 +114,9 @@ export class GameState implements Serializable {
         );
     }
     public addPlayer(player: Player) {
+        if (this.allPlayers.size >= 4) {
+            throw new Error("Already full");
+        }
         this.allPlayerIdArr.push(player.getId());
         if (this.currentActivePlayerId === "") {
             this.currentActivePlayerId = player.getId();

@@ -1,5 +1,7 @@
+import { SocketType } from "../types";
 import { Ability, AbilityName } from "./ability";
 import { GameState } from "./gameState";
+import { v4 as uuidv4 } from "uuid";
 import { Serializable } from "./utils/serializable";
 
 export class Player implements Serializable {
@@ -8,11 +10,13 @@ export class Player implements Serializable {
     private name: String;
     private abilities: Map<string, Ability>;
     private gameState: GameState;
-    private socket: any;
+    private socket: SocketType;
 
     constructor(gameState: GameState, socket: any) {
         this.gameState = gameState;
+        this.abilities = new Map();
         this.socket = socket;
+        this.id = uuidv4();
     }
     public getId() {
         return this.id;
@@ -40,17 +44,17 @@ export class Player implements Serializable {
     public removeAbility(abilityName: string) {
         this.abilities.delete(abilityName);
     }
-    public serialize(): string {
-        const abilities: string[] = [];
+    public serialize() {
+        const abilities: any[] = [];
         for (const [_, ability] of this.abilities) {
             abilities.push(ability.serialize());
         }
 
-        return JSON.stringify({
+        return {
             playerId: this.id,
             playerName: this.name,
             livesLeft: this.lives,
             abilities: abilities,
-        });
+        };
     }
 }

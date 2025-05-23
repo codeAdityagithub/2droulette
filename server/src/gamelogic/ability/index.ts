@@ -14,5 +14,5 @@ export interface Ability extends Serializable {
     abilityName: String;
     use(): void;
     use(playerId: string, abilityName: AbilityName): void;
-    serialize(): string;
+    serialize(): any;
 }

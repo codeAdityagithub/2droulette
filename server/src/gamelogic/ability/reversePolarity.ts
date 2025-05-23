@@ -10,9 +10,9 @@ export class ReverseBulletPolarity implements Ability {
     public use() {
         this.gameState.reverseBulletPolarity();
     }
-    public serialize(): string {
-        return JSON.stringify({
+    public serialize() {
+        return {
             abilityName: this.abilityName,
-        });
+        };
     }
 }

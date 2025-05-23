@@ -10,9 +10,9 @@ export class DoubleBullet implements Ability {
     public use() {
         this.gameState.doubleBullet();
     }
-    public serialize(): string {
-        return JSON.stringify({
+    public serialize() {
+        return {
             abilityName: this.abilityName,
-        });
+        };
     }
 }

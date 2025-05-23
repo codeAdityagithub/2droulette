@@ -5,9 +5,31 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import path from "path";
 import { config } from "dotenv";
+
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { Player } from "./gamelogic/player";
+import { addPlayer, removeplayer } from "./gamelogic/lobby";
+
 config();
 
 const app = express();
+const httpServer = createServer(app);
+
+const io = new Server(httpServer, {
+    cors: {
+        origin: process.env.CLIENT_URL,
+        credentials: true,
+    },
+});
+
+io.on("connection", (socket) => {
+    addPlayer(socket, io);
+    socket.emit("getId", socket.data.playerId);
+    socket.on("disconnect", () => {
+        removeplayer(socket.data.gameId, socket.data.playerId);
+    });
+});
 
 // Use Helmet!
 app.use(express.json());
@@ -31,6 +53,6 @@ app.post("/test", (req, res) => {
 
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
     console.log(`app running on http://127.0.0.1:${PORT}`);
 });

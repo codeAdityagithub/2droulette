@@ -20,9 +20,9 @@ export class StealAbility implements Ability {
         }
     }
 
-    public serialize(): string {
-        return JSON.stringify({
+    public serialize() {
+        return {
             abilityName: this.abilityName,
-        });
+        };
     }
 }

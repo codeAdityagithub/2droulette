@@ -10,9 +10,9 @@ export class SkipTurnAbility implements Ability {
     public use() {
         this.gameState.skipTurn();
     }
-    public serialize(): string {
-        return JSON.stringify({
+    public serialize() {
+        return {
             abilityName: this.abilityName,
-        });
+        };
     }
 }
