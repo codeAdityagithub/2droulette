@@ -31,8 +31,14 @@ export class GameState implements Serializable {
     public getGameId() {
         return this.gameId;
     }
+    public isGameStarted() {
+        return this.isStarted;
+    }
+    public getPlayerNumber() {
+        return this.allPlayers.size;
+    }
     public isGameFull() {
-        return this.allPlayers.size >= 2;
+        return this.allPlayers.size >= 4;
     }
 
     public getCurrentGameRound() {
@@ -112,6 +118,7 @@ export class GameState implements Serializable {
         this.allPlayerIdArr = this.allPlayerIdArr.filter(
             (id) => id !== playerId
         );
+        this.io.to(this.gameId).emit("update_state", this.serialize());
     }
     public addPlayer(player: Player) {
         if (this.allPlayers.size >= 4) {
@@ -140,14 +147,20 @@ export class GameState implements Serializable {
     public doubleBullet() {
         this.bullets[this.currentBulletIndex] *= 2;
     }
-    public stealAbility(playerId: string, abilityName: AbilityName) {
-        const player = this.allPlayers.get(playerId);
-        if (!player) {
-            throw new Error("No player with this id");
+    public stealAbility(
+        ownerId: string,
+        getterId: string,
+        abilityIndex: number
+    ) {
+        const owner = this.allPlayers.get(ownerId);
+        const getter = this.allPlayers.get(getterId);
+        if (!owner || !getter) {
+            return;
         }
-        if (!player.hasAbility(abilityName)) {
-            throw new Error("Does not have that ability");
-        }
-        player.removeAbility(abilityName);
+        const ability = owner.getAbility(abilityIndex);
+        if (!ability) return;
+
+        owner.removeAbility(abilityIndex);
+        getter.addAbility(ability);
     }
 }

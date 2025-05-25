@@ -9,7 +9,7 @@ export function addPlayer(socket: SocketType, io: IOType) {
     if (lobbyMap.size === 0) {
         const game = new GameState(io);
         lobbyMap.set(game.getGameId(), game);
-        const player = new Player(game, socket);
+        const player = new Player(game, socket, 0);
 
         game.addPlayer(player);
 
@@ -19,10 +19,14 @@ export function addPlayer(socket: SocketType, io: IOType) {
     } else {
         // traverse
         for (const gameState of lobbyMap.values()) {
-            if (gameState.isGameFull()) {
+            if (gameState.isGameFull() || gameState.isGameStarted()) {
                 continue;
             }
-            const player = new Player(gameState, socket);
+            const player = new Player(
+                gameState,
+                socket,
+                gameState.getPlayerNumber()
+            );
             gameState.addPlayer(player);
             socket.data.gameId = gameState.getGameId();
             socket.data.playerId = player.getId();
@@ -38,7 +42,7 @@ export function addPlayer(socket: SocketType, io: IOType) {
 
         const game = new GameState(io);
         lobbyMap.set(game.getGameId(), game);
-        const player = new Player(game, socket);
+        const player = new Player(game, socket, 0);
 
         game.addPlayer(player);
         socket.data.gameId = game.getGameId();

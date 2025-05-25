@@ -3,20 +3,24 @@ import { Ability, AbilityName } from "./ability";
 import { GameState } from "./gameState";
 import { v4 as uuidv4 } from "uuid";
 import { Serializable } from "./utils/serializable";
+import { StealAbility } from "./ability/stealAbility";
+import generateAbilities from "./utils/getRandomAbilities";
 
 export class Player implements Serializable {
     private lives: number;
     private id: string;
     private name: String;
-    private abilities: Map<string, Ability>;
+    private abilities: Ability[];
     private gameState: GameState;
     private socket: SocketType;
-
-    constructor(gameState: GameState, socket: any) {
+    private position: number;
+    constructor(gameState: GameState, socket: any, position: number) {
         this.gameState = gameState;
-        this.abilities = new Map();
+        this.abilities = generateAbilities(gameState);
         this.socket = socket;
         this.id = uuidv4();
+        this.position = position;
+        this.lives = 5;
     }
     public getId() {
         return this.id;
@@ -33,28 +37,47 @@ export class Player implements Serializable {
         this.lives -= bullet;
         return this.lives;
     }
-    public useAbility(abilityName: AbilityName) {
-        if (this.abilities.has(abilityName)) {
-            this.abilities.get(abilityName)!.use();
+    public getAbility(abilityIndex: number) {
+        if (abilityIndex >= this.abilities.length) return null;
+        return this.abilities[abilityIndex];
+    }
+    public addAbility(ability: Ability) {
+        this.abilities.push(ability);
+    }
+    public useAbility(
+        abilityIndex: number,
+        playerId?: string,
+        stealIndex?: number
+    ) {
+        if (abilityIndex >= this.abilities.length) return;
+        const ability = this.abilities[abilityIndex];
+        // if our ability is steal then its different
+        if (
+            ability instanceof StealAbility &&
+            playerId != undefined &&
+            stealIndex != undefined
+        ) {
+            if (!playerId) return;
+
+            ability.use(playerId, this.id, stealIndex);
+        } else {
+            ability.use();
         }
+        this.abilities = this.abilities.filter((_, i) => i === abilityIndex);
     }
-    public hasAbility(abilityName: AbilityName): boolean {
-        return this.abilities.has(abilityName);
-    }
-    public removeAbility(abilityName: string) {
-        this.abilities.delete(abilityName);
+
+    public removeAbility(abilityIndex: number) {
+        if (abilityIndex >= this.abilities.length) return;
+
+        this.abilities = this.abilities.filter((_, i) => i === abilityIndex);
     }
     public serialize() {
-        const abilities: any[] = [];
-        for (const [_, ability] of this.abilities) {
-            abilities.push(ability.serialize());
-        }
-
         return {
             playerId: this.id,
             playerName: this.name,
             livesLeft: this.lives,
-            abilities: abilities,
+            abilities: this.abilities.map((a) => a.serialize()),
+            position: this.position,
         };
     }
 }

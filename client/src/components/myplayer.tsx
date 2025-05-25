@@ -1,7 +1,7 @@
 import type { PlayerType } from "../types";
 import playerImage from "../assets/sitting.png";
 
-const MyPlayer = ({}: { player: PlayerType }) => {
+const MyPlayer = ({ player }: { player: PlayerType }) => {
     return (
         <div
             className={`w-full h-full flex items-start justify-center overflow-hidden rotate-180`}

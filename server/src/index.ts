@@ -25,6 +25,7 @@ const io = new Server(httpServer, {
 
 io.on("connection", (socket) => {
     addPlayer(socket, io);
+
     socket.emit("getId", socket.data.playerId);
     socket.on("disconnect", () => {
         removeplayer(socket.data.gameId, socket.data.playerId);

@@ -1,9 +1,9 @@
-import { Ability } from ".";
+import { Ability, AbilityName } from ".";
 import { GameState } from "../gameState";
 
 export class ReverseBulletPolarity implements Ability {
     gameState: GameState;
-    abilityName: String;
+    abilityName: AbilityName = "ReversePolarity";
     constructor(gameState: GameState) {
         this.gameState = gameState;
     }

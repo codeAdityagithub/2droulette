@@ -11,8 +11,8 @@ export type AbilityName =
 
 export interface Ability extends Serializable {
     gameState: GameState; // constructor injection
-    abilityName: String;
+    abilityName: AbilityName;
     use(): void;
-    use(playerId: string, abilityName: AbilityName): void;
+    use(ownerId: string, playerId: string, abilityName: AbilityName): void;
     serialize(): any;
 }

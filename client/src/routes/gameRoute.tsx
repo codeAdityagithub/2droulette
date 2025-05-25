@@ -1,62 +1,80 @@
 import Table from "../components/table";
-import type { GameState } from "../types";
-import { useSocket } from "../hooks/useSocket";
-import { useEffect, useMemo, useState } from "react";
+
 import Player from "../components/player";
 import MyPlayer from "../components/myplayer";
 import Loading from "../components/loading";
-// import Loading from "../components/loading";
+import useGameLogic from "../hooks/useGameLogic";
+import { useMemo } from "react";
+import type { PlayerType } from "../types";
 
 const GameRoute = () => {
-    const [gameState, setGameState] = useState<GameState | null>(null);
-    const { socket, id } = useSocket();
+    const { hasMyPlayer, myPlayer, gameState } = useGameLogic();
+    let rotate;
+    if (myPlayer?.position === 0) rotate = "";
+    else if (myPlayer?.position === 2) rotate = "rotate-180";
+    else if (myPlayer?.position === 1) rotate = "rotate-90";
+    else rotate = "-rotate-90";
 
-    const hasMyPlayer = useMemo(() => {
-        return (
-            gameState?.allPlayers.find((player) => {
-                player.playerId === id;
-            }) !== undefined
-        );
-    }, [gameState, id]);
+    const playerMap = useMemo(() => {
+        const map = {} as Record<number, PlayerType>;
+        if (!gameState) return map;
 
-    useEffect(() => {
-        const getGameState = (value: GameState) => {
-            console.log(value);
-            setGameState(value);
-        };
-        socket.on("start_match", getGameState);
+        for (const player of gameState?.allPlayers) {
+            map[player.position] = player;
+        }
+        return map;
+    }, [gameState]);
 
-        return () => {
-            socket.off("gameState", getGameState);
-        };
-    }, []);
+    console.log(playerMap, myPlayer);
+
     return (
-        <div className="w-full h-full relative ">
+        <div className="w-full h-full overflow-hidden relative ">
             <Table />
             {gameState === null ? (
                 <Loading />
             ) : (
-                <div className="flex items-center justify-center *:flex-1 *:flex *:items-center flex-col absolute inset-0 border-amber-500">
+                /* apply rotate here */ <div
+                    className={`flex w-[600px] h-[600px] lg:w-[650px] lg:h-[650px] m-auto items-center justify-center *:flex-1 *:flex *:items-center flex-col absolute inset-0 ${rotate} border-amber-500`}
+                >
                     <div className="">
-                        <Player
-                            player={{}}
-                            position="top"
-                        />
+                        {/* ttop - 2 */}
+                        {playerMap[2] ? (
+                            <Player
+                                player={playerMap[2]}
+                                activeId={gameState.currentPlayerId}
+                            />
+                        ) : null}
                     </div>
                     {/* mid */}
-                    <div className="w-full max-w-[1100px] flex-row justify-between gap-52">
-                        <Player
-                            player={{}}
-                            position="left"
-                        />
-                        <Player
-                            player={{}}
-                            position="right"
-                        />
+                    <div className="w-full flex-row *:flex-1 justify-self-end gap-52">
+                        {/* left 3 */}
+                        {playerMap[3] ? (
+                            <Player
+                                player={playerMap[3]}
+                                activeId={gameState.currentPlayerId}
+                            />
+                        ) : (
+                            <div></div>
+                        )}
+
+                        {/* right 1 */}
+                        {playerMap[1] ? (
+                            <Player
+                                player={playerMap[1]}
+                                activeId={gameState.currentPlayerId}
+                            />
+                        ) : (
+                            <div></div>
+                        )}
                     </div>
-                    {/* bottom */}
+                    {/* bottom -0 */}
                     <div className="">
-                        {hasMyPlayer ? <MyPlayer player={{}} /> : null}
+                        {playerMap[0] ? (
+                            <Player
+                                player={playerMap[0]}
+                                activeId={gameState.currentPlayerId}
+                            />
+                        ) : null}
                     </div>
                 </div>
             )}

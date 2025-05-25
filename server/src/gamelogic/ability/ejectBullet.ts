@@ -1,9 +1,9 @@
-import { Ability } from ".";
+import { Ability, AbilityName } from ".";
 import { GameState } from "../gameState";
 
 export class EjectBullet implements Ability {
     gameState: GameState;
-    abilityName: String;
+    abilityName: AbilityName = "EjectBullet";
     constructor(gameState: GameState) {
         this.gameState = gameState;
     }

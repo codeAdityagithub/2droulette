@@ -3,6 +3,7 @@ export type PlayerType = {
     playerName: string;
     livesLeft: number;
     abilities: AbilityType[];
+    position: number;
 };
 
 export type AbilityName =
