@@ -31,6 +31,16 @@ export class GameState implements Serializable {
     public getGameId() {
         return this.gameId;
     }
+    public getMatchMaking() {
+        const matchMaking: any[] = [];
+        for (const player of this.allPlayers.values()) {
+            matchMaking.push({
+                name: player.getName(),
+                position: player.getPosition(),
+            });
+        }
+        return matchMaking;
+    }
     public isGameStarted() {
         return this.isStarted;
     }
@@ -47,12 +57,14 @@ export class GameState implements Serializable {
     public getCurrentPlayerId() {
         return this.currentActivePlayerId;
     }
-    public startMatch() {
+    public startMatch(): boolean {
         if (this.allPlayers.size < 2) {
-            throw new Error("Not enough players");
+            this.io.to(this.gameId).emit("matchmaking_failed");
+            return false;
         }
-        this.io.to(this.gameId).emit("start_match", this.serialize());
+        this.io.to(this.gameId).emit("start_match", this.gameId);
         this.isStarted = true;
+        return true;
     }
     public resetRound() {
         this.gameRound++;
@@ -118,10 +130,11 @@ export class GameState implements Serializable {
         this.allPlayerIdArr = this.allPlayerIdArr.filter(
             (id) => id !== playerId
         );
-        this.io.to(this.gameId).emit("update_state", this.serialize());
+        if (this.isStarted)
+            this.io.to(this.gameId).emit("update_match", this.serialize());
     }
     public addPlayer(player: Player) {
-        if (this.allPlayers.size >= 4) {
+        if (this.allPlayers.size >= 4 || this.isStarted) {
             throw new Error("Already full");
         }
         this.allPlayerIdArr.push(player.getId());

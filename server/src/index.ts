@@ -8,7 +8,7 @@ import { config } from "dotenv";
 
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { addPlayer, removeplayer } from "./gamelogic/lobby";
+import { addPlayer, getGameState, removeplayer } from "./gamelogic/lobby";
 
 config();
 
@@ -23,10 +23,29 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket) => {
-    socket.emit("getId", socket.data.playerId);
+    socket.on("join", (name) => {
+        addPlayer(socket, io, name);
+        socket.emit("getId", socket.data.playerId);
+        socket.emit("gameId", socket.data.gameId);
+    });
+    socket.on("getMatchMaking", () => {
+        const gameState = getGameState(socket.data.gameId);
+        if (gameState)
+            io.to(socket.data.gameId).emit(
+                "matchMaking",
+                gameState.getMatchMaking()
+            );
+    });
 
-    addPlayer(socket, io);
-
+    socket.on("removeFromMatch", () => {
+        removeplayer(socket.data.gameId, socket.data.playerId);
+        const gameState = getGameState(socket.data.gameId);
+        if (gameState)
+            io.to(socket.data.gameId).emit(
+                "matchMaking",
+                gameState.getMatchMaking()
+            );
+    });
     socket.on("disconnect", () => {
         removeplayer(socket.data.gameId, socket.data.playerId);
     });
@@ -50,6 +69,15 @@ app.use("/static", express.static(path.join(__dirname, "../public")));
 app.post("/test", (req, res) => {
     console.log(req.cookies);
     res.json({ message: "test" });
+});
+// @ts-expect-error
+app.get("/game/:gameid", (req, res) => {
+    const gameid = req.params.gameid;
+    const gamestate = getGameState(gameid);
+    if (!gamestate) {
+        return res.status(400);
+    }
+    return res.status(200).send(gamestate.serialize());
 });
 
 const PORT = process.env.PORT || 8080;

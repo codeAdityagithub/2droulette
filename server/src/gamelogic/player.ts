@@ -14,16 +14,28 @@ export class Player implements Serializable {
     private gameState: GameState;
     private socket: SocketType;
     private position: number;
-    constructor(gameState: GameState, socket: any, position: number) {
+    constructor(
+        gameState: GameState,
+        socket: any,
+        position: number,
+        name: string
+    ) {
         this.gameState = gameState;
         this.abilities = generateAbilities(gameState);
         this.socket = socket;
         this.id = uuidv4();
         this.position = position;
+        this.name = name;
         this.lives = 5;
     }
     public getId() {
         return this.id;
+    }
+    public getName() {
+        return this.name;
+    }
+    public getPosition() {
+        return this.position;
     }
     // socket.io
     public shoot(playerId: string) {

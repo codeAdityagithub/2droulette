@@ -5,13 +5,30 @@ import { Player } from "./player";
 
 const lobbyMap = singleton("lobby", () => new Map<string, GameState>());
 
-export function addPlayer(socket: SocketType, io: IOType) {
+const timers = singleton("times", () => new Map<string, number>());
+const MATCHMAKINGTIME = 1000 * 10;
+
+setInterval(() => {
+    for (const [gameId, timeStamp] of timers) {
+        const now = Date.now();
+        if (now - timeStamp >= MATCHMAKINGTIME) {
+            const started = lobbyMap.get(gameId)?.startMatch();
+            if (!started) {
+                lobbyMap.delete(gameId);
+                timers.delete(gameId);
+            }
+        }
+    }
+}, 5000);
+
+export function addPlayer(socket: SocketType, io: IOType, name: string) {
     if (lobbyMap.size === 0) {
         const game = new GameState(io);
         lobbyMap.set(game.getGameId(), game);
-        const player = new Player(game, socket, 0);
+        const player = new Player(game, socket, 0, name);
 
         game.addPlayer(player);
+        timers.set(game.getGameId(), Date.now());
 
         socket.data.gameId = game.getGameId();
         socket.data.playerId = player.getId();
@@ -25,7 +42,8 @@ export function addPlayer(socket: SocketType, io: IOType) {
             const player = new Player(
                 gameState,
                 socket,
-                gameState.getPlayerNumber()
+                gameState.getPlayerNumber(),
+                name
             );
             gameState.addPlayer(player);
             socket.data.gameId = gameState.getGameId();
@@ -42,9 +60,11 @@ export function addPlayer(socket: SocketType, io: IOType) {
 
         const game = new GameState(io);
         lobbyMap.set(game.getGameId(), game);
-        const player = new Player(game, socket, 0);
+        const player = new Player(game, socket, 0, name);
 
         game.addPlayer(player);
+        timers.set(game.getGameId(), Date.now());
+
         socket.data.gameId = game.getGameId();
         socket.data.playerId = player.getId();
         socket.join(game.getGameId());
@@ -53,7 +73,11 @@ export function addPlayer(socket: SocketType, io: IOType) {
 export function removeplayer(gameId: string, playerId: string) {
     const gameState = lobbyMap.get(gameId);
     gameState?.removePlayer(playerId);
-    if (gameState?.checkGameOver()) {
+    if (gameState?.getPlayerNumber() === 0) {
         lobbyMap.delete(gameId);
     }
+}
+
+export function getGameState(gameId: string) {
+    return lobbyMap.get(gameId);
 }
