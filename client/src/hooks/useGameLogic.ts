@@ -23,7 +23,6 @@ const useGameLogic = () => {
     }, []);
 
     return {
-        hasMyPlayer: myPlayer != undefined,
         myPlayer,
         gameState,
         socket,

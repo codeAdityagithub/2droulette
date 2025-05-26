@@ -8,7 +8,6 @@ import { config } from "dotenv";
 
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { Player } from "./gamelogic/player";
 import { addPlayer, removeplayer } from "./gamelogic/lobby";
 
 config();
@@ -24,9 +23,10 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket) => {
+    socket.emit("getId", socket.data.playerId);
+
     addPlayer(socket, io);
 
-    socket.emit("getId", socket.data.playerId);
     socket.on("disconnect", () => {
         removeplayer(socket.data.gameId, socket.data.playerId);
     });

@@ -1,14 +1,13 @@
 import Table from "../components/table";
 
 import Player from "../components/player";
-import MyPlayer from "../components/myplayer";
 import Loading from "../components/loading";
 import useGameLogic from "../hooks/useGameLogic";
 import { useMemo } from "react";
 import type { PlayerType } from "../types";
 
 const GameRoute = () => {
-    const { hasMyPlayer, myPlayer, gameState } = useGameLogic();
+    const { myPlayer, gameState } = useGameLogic();
     let rotate;
     if (myPlayer?.position === 0) rotate = "";
     else if (myPlayer?.position === 2) rotate = "rotate-180";
@@ -24,8 +23,6 @@ const GameRoute = () => {
         }
         return map;
     }, [gameState]);
-
-    console.log(playerMap, myPlayer);
 
     return (
         <div className="w-full h-full overflow-hidden relative ">

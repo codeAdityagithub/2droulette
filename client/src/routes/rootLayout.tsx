@@ -1,6 +1,7 @@
 import { Outlet } from "react-router";
 import { socket } from "../core/socket";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 const RootLayout = () => {
     const [id, setId] = useState("");
@@ -18,6 +19,7 @@ const RootLayout = () => {
     }, []);
     return (
         <div className="w-full h-svh bg-amber-50 flex justify-center items-center">
+            <Button />
             <Outlet context={{ socket, id }} />
         </div>
     );
