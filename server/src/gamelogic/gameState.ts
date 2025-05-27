@@ -31,6 +31,21 @@ export class GameState implements Serializable {
     public getGameId() {
         return this.gameId;
     }
+    public getCountBullets() {
+        let active = 0;
+
+        for (let i = 0; i < this.bullets.length; i++) {
+            if (this.bullets[i] === 1) active++;
+        }
+        const currRoundbulletinfo = {
+            active: active,
+            blank: this.bullets.length - active,
+        };
+        return currRoundbulletinfo;
+    }
+    public getPlayer(playerId: string) {
+        return this.allPlayers.get(playerId);
+    }
     public getMatchMaking() {
         const matchMaking: any[] = [];
         for (const player of this.allPlayers.values()) {

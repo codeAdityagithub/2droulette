@@ -3,11 +3,12 @@ import Table from "../components/table";
 import Player from "../components/player";
 import Loading from "../components/loading";
 import useGameLogic from "../hooks/useGameLogic";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type { PlayerType } from "../types";
+import RoundInfo from "@/components/RoundInfo";
 
 const GameRoute = () => {
-    const { myPlayer, gameState } = useGameLogic();
+    const { myPlayer, gameState, currentRoundbulletinfo } = useGameLogic();
     let rotate;
     if (myPlayer?.position === 0) rotate = "";
     else if (myPlayer?.position === 2) rotate = "rotate-180";
@@ -27,6 +28,7 @@ const GameRoute = () => {
     return (
         <div className="w-full h-full overflow-hidden relative ">
             <Table />
+            <RoundInfo currentRoundbulletinfo={currentRoundbulletinfo} />
             {gameState === null ? (
                 <Loading />
             ) : (

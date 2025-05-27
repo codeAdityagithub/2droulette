@@ -46,6 +46,16 @@ io.on("connection", (socket) => {
                 gameState.getMatchMaking()
             );
     });
+    socket.on(
+        "use_ability",
+        (index: number, ownerId?: string, stealIndex?: number) => {
+            const gameState = getGameState(socket.data.gameId);
+            if (!gameState) return;
+            const player = gameState.getPlayer(socket.data.playerId);
+            if (!player) return;
+            player.useAbility(index, ownerId, stealIndex);
+        }
+    );
     socket.on("disconnect", () => {
         removeplayer(socket.data.gameId, socket.data.playerId);
     });
@@ -66,10 +76,6 @@ app.use(cookieParser());
 
 app.use("/static", express.static(path.join(__dirname, "../public")));
 
-app.post("/test", (req, res) => {
-    console.log(req.cookies);
-    res.json({ message: "test" });
-});
 // @ts-expect-error
 app.get("/game/:gameid", (req, res) => {
     const gameid = req.params.gameid;
@@ -77,7 +83,11 @@ app.get("/game/:gameid", (req, res) => {
     if (!gamestate) {
         return res.status(400);
     }
-    return res.status(200).send(gamestate.serialize());
+    const currRoundbulletinfo = gamestate.getCountBullets();
+    return res.status(200).send({
+        gamestate: gamestate.serialize(),
+        currRoundbulletinfo: currRoundbulletinfo,
+    });
 });
 
 const PORT = process.env.PORT || 8080;

@@ -11,12 +11,14 @@ const RootLayout = () => {
     useEffect(() => {
         if (
             prevLocation.current.includes("matchmaking") &&
-            !location.pathname.includes("matchmaking")
+            !location.pathname.includes("matchmaking") &&
+            !location.pathname.includes("game")
         ) {
             socket.emit("removeFromMatch");
         }
         prevLocation.current = location.pathname;
     }, [location]);
+
     useEffect(() => {
         if (socket.disconnected) socket.connect();
         const getId = (id: string) => {

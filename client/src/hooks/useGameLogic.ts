@@ -4,10 +4,15 @@ import { useSocket } from "./useSocket";
 import { useLoaderData } from "react-router";
 
 const useGameLogic = () => {
-    const initialGameState: GameState = useLoaderData();
+    const initialGameState: any = useLoaderData();
     const [gameState, setGameState] = useState<GameState | null>(
-        initialGameState
+        initialGameState.gamestate
     );
+    const currentRoundbulletinfo = initialGameState.currRoundbulletinfo as {
+        active: number;
+        blank: number;
+    };
+
     const { socket, id } = useSocket();
     const myPlayer = useMemo(() => {
         return gameState?.allPlayers.find((player) => player.playerId === id);
@@ -30,6 +35,7 @@ const useGameLogic = () => {
         gameState,
         socket,
         id,
+        currentRoundbulletinfo,
     } as const;
 };
 

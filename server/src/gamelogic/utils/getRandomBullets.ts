@@ -1,4 +1,4 @@
-export default function () {
+export default function getRandomBullets() {
     const length = Math.floor(Math.random() * 7) + 4; // Random length from 4 to 10
 
     let array: number[] = [];
