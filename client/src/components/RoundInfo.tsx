@@ -26,15 +26,16 @@ const RoundInfo = ({
 }: {
     currentRoundbulletinfo: { active: number; blank: number };
 }) => {
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
     useEffect(() => {
+        setOpen(true);
         const timeout = setTimeout(() => {
             setOpen(false);
         }, 5000);
         return () => {
             clearTimeout(timeout);
         };
-    }, []);
+    }, [active, blank]);
     return (
         <Dialog
             open={open}

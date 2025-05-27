@@ -3,7 +3,7 @@ import Table from "../components/table";
 import Player from "../components/player";
 import Loading from "../components/loading";
 import useGameLogic from "../hooks/useGameLogic";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { PlayerType } from "../types";
 import RoundInfo from "@/components/RoundInfo";
 
@@ -24,10 +24,24 @@ const GameRoute = () => {
         }
         return map;
     }, [gameState]);
+    const isMyPlayerActive = myPlayer?.playerId === gameState?.currentPlayerId;
+    const [isShooting, setIsShooting] = useState(false);
+    const [prevId, setPrevId] = useState(gameState?.currentPlayerId);
 
+    const triggerShoot = () => {
+        setIsShooting(true);
+        setPrevId(gameState?.currentPlayerId);
+        setTimeout(() => {
+            setIsShooting(false);
+            setPrevId(gameState?.currentPlayerId);
+        }, 1000);
+    };
     return (
         <div className="w-full h-full overflow-hidden relative ">
             <Table />
+            <div className="absolute w-full top-8 text-center text-4xl font-bold">
+                Round {gameState?.gameRound}
+            </div>
             <RoundInfo currentRoundbulletinfo={currentRoundbulletinfo} />
             {gameState === null ? (
                 <Loading />
@@ -39,8 +53,14 @@ const GameRoute = () => {
                         {/* ttop - 2 */}
                         {playerMap[2] ? (
                             <Player
+                                triggerShoot={triggerShoot}
                                 player={playerMap[2]}
+                                canGetShot={isMyPlayerActive}
                                 activeId={gameState.currentPlayerId}
+                                isShooting={
+                                    prevId === playerMap[3].playerId &&
+                                    isShooting
+                                }
                             />
                         ) : null}
                     </div>
@@ -49,8 +69,14 @@ const GameRoute = () => {
                         {/* left 3 */}
                         {playerMap[3] ? (
                             <Player
+                                triggerShoot={triggerShoot}
+                                canGetShot={isMyPlayerActive}
                                 player={playerMap[3]}
                                 activeId={gameState.currentPlayerId}
+                                isShooting={
+                                    prevId === playerMap[2].playerId &&
+                                    isShooting
+                                }
                             />
                         ) : (
                             <div></div>
@@ -59,8 +85,14 @@ const GameRoute = () => {
                         {/* right 1 */}
                         {playerMap[1] ? (
                             <Player
+                                canGetShot={isMyPlayerActive}
                                 player={playerMap[1]}
                                 activeId={gameState.currentPlayerId}
+                                triggerShoot={triggerShoot}
+                                isShooting={
+                                    prevId === playerMap[1].playerId &&
+                                    isShooting
+                                }
                             />
                         ) : (
                             <div></div>
@@ -70,8 +102,14 @@ const GameRoute = () => {
                     <div className="">
                         {playerMap[0] ? (
                             <Player
+                                canGetShot={isMyPlayerActive}
                                 player={playerMap[0]}
                                 activeId={gameState.currentPlayerId}
+                                triggerShoot={triggerShoot}
+                                isShooting={
+                                    prevId === playerMap[0].playerId &&
+                                    isShooting
+                                }
                             />
                         ) : null}
                     </div>

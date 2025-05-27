@@ -52,10 +52,19 @@ io.on("connection", (socket) => {
             const gameState = getGameState(socket.data.gameId);
             if (!gameState) return;
             const player = gameState.getPlayer(socket.data.playerId);
-            if (!player) return;
+            if (!player || gameState.getCurrentPlayerId() !== player.getId())
+                return;
             player.useAbility(index, ownerId, stealIndex);
         }
     );
+    socket.on("shoot_player", (playerId: string) => {
+        const gameState = getGameState(socket.data.gameId);
+        if (!gameState) return;
+        const curPlayer = gameState.getPlayer(socket.data.playerId);
+        if (!curPlayer || gameState.getCurrentPlayerId() != curPlayer.getId())
+            return;
+        gameState.shootPlayer(playerId);
+    });
     socket.on("disconnect", () => {
         removeplayer(socket.data.gameId, socket.data.playerId);
     });

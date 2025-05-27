@@ -11,7 +11,7 @@ export class GameState implements Serializable {
     private bullets: number[]; // 0-1 array
     private currentBulletIndex: number;
     private allPlayerIdArr: string[];
-    private currentActivePlayerIndex: number;
+    private currentActivePlayerIndex: number = 0;
     private currentActivePlayerId: string;
     private allPlayers: Map<string, Player>;
     private isStarted = false;
@@ -85,14 +85,19 @@ export class GameState implements Serializable {
         this.gameRound++;
         this.bullets = getRandomBullets();
         this.currentBulletIndex = 0;
+        console.log("resetting round", this.getCountBullets());
+        this.io
+            .to(this.gameId)
+            .emit("new_round", this.serialize(), this.getCountBullets());
     }
     public rotateTable() {
         const inc = this.isSkipActive ? 2 : 1;
         this.currentActivePlayerIndex =
             (this.currentActivePlayerIndex + inc) % this.allPlayerIdArr.length;
-        this.currentActivePlayerId = this.allPlayers
-            .get(this.allPlayerIdArr[this.currentActivePlayerIndex])!
-            .getId();
+
+        console.log("rotating table with ", inc);
+        this.currentActivePlayerId =
+            this.allPlayerIdArr[this.currentActivePlayerIndex];
     }
     public serialize() {
         const allPlayersArray: any[] = [];
@@ -110,34 +115,46 @@ export class GameState implements Serializable {
         return false;
     }
     public isRoundActive(): boolean {
-        return this.bullets[this.currentBulletIndex] === 1;
+        return this.bullets[this.currentBulletIndex] !== 0;
     }
 
     public nextBullet() {
         this.currentBulletIndex++;
+        console.log("next bullet", this.bullets);
         if (this.currentBulletIndex === this.bullets.length) {
             this.resetRound();
         }
     }
 
     public shootPlayer(playerId: string) {
+        if (!this.isStarted) return;
+
         const isActive = this.isRoundActive();
+        console.log(isActive, "active round");
+
         if (isActive) {
             const lives = this.allPlayers
                 .get(playerId)
                 ?.getShot(this.bullets[this.currentBulletIndex]);
+
             if (lives === undefined) {
                 // no player shot
-                throw new Error("No player with that id");
+                return;
             }
+
+            this.allPlayers.get(playerId)?.socket.emit("getShot", playerId);
+
             if (lives === 0) {
                 this.removePlayer(playerId);
-                this.nextBullet();
             }
-        } else {
-            this.nextBullet();
         }
+
+        this.io.to(this.gameId).emit("shoot", isActive);
+
+        this.nextBullet();
         this.rotateTable();
+
+        this.io.to(this.gameId).emit("update_state", this.serialize());
     }
 
     public removePlayer(playerId: string) {
@@ -146,7 +163,7 @@ export class GameState implements Serializable {
             (id) => id !== playerId
         );
         if (this.isStarted)
-            this.io.to(this.gameId).emit("update_match", this.serialize());
+            this.io.to(this.gameId).emit("update_state", this.serialize());
     }
     public addPlayer(player: Player) {
         if (this.allPlayers.size >= 4 || this.isStarted) {

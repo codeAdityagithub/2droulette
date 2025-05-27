@@ -12,7 +12,7 @@ export class Player implements Serializable {
     private name: String;
     private abilities: Ability[];
     private gameState: GameState;
-    private socket: SocketType;
+    public socket: SocketType;
     private position: number;
     constructor(
         gameState: GameState,
@@ -47,6 +47,7 @@ export class Player implements Serializable {
     }
     public getShot(bullet: number) {
         this.lives -= bullet;
+        console.log("getting shot", this.name, "bullet", bullet);
         return this.lives;
     }
     public getAbility(abilityIndex: number) {

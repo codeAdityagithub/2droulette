@@ -31,6 +31,7 @@ const Ability = ({
                 if (!isMyAbility) return;
                 useAbility(abilityIndex);
             }}
+            title={ability.abilityName}
             className={cn(
                 isMyAbility
                     ? "bg-green-300/80 hover:bg-green-300 transition-colors"
