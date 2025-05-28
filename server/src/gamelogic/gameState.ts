@@ -17,7 +17,7 @@ export class GameState implements Serializable {
     private isStarted = false;
     private isSkipActive = false;
     private io: IOType;
-
+    private isGameOver = false;
     constructor(io: IOType) {
         this.gameId = uuidv4();
         this.gameRound = 1;
@@ -86,6 +86,10 @@ export class GameState implements Serializable {
         this.bullets = getRandomBullets();
         this.currentBulletIndex = 0;
         console.log("resetting round", this.getCountBullets());
+        for (const player of this.allPlayers.values()) {
+            player.resetAbilities();
+        }
+
         this.io
             .to(this.gameId)
             .emit("new_round", this.serialize(), this.getCountBullets());
@@ -93,28 +97,52 @@ export class GameState implements Serializable {
     public rotateTable() {
         const inc = this.isSkipActive ? 2 : 1;
         this.isSkipActive = false;
-
         this.currentActivePlayerIndex =
             (this.currentActivePlayerIndex + inc) % this.allPlayerIdArr.length;
 
         console.log("rotating table with ", inc);
+        console.log(this.allPlayerIdArr, this.currentActivePlayerIndex);
+        while (
+            this.allPlayerIdArr.length > 1 &&
+            this.allPlayerIdArr[this.currentActivePlayerIndex] === ""
+        ) {
+            this.currentActivePlayerIndex =
+                (this.currentActivePlayerIndex + 1) %
+                this.allPlayerIdArr.length;
+        }
+
         this.currentActivePlayerId =
             this.allPlayerIdArr[this.currentActivePlayerIndex];
     }
     public serialize() {
         const allPlayersArray: any[] = [];
         for (const [_, player] of this.allPlayers) {
-            allPlayersArray.push(player.serialize());
+            if (player.isAlive) allPlayersArray.push(player.serialize());
+        }
+        let winnerId: string | null = null;
+        if (this.isGameOver) {
+            winnerId = this.allPlayerIdArr[0];
         }
         return {
             gameRound: this.gameRound,
             currentPlayerId: this.currentActivePlayerId,
             allPlayers: allPlayersArray,
+            isGameOver: this.isGameOver,
+            winnerId,
         };
     }
-    public checkGameOver(): boolean {
-        if (this.allPlayers.size <= 1) return true;
-        return false;
+    public checkGameOver() {
+        let activeCount = 0;
+        for (const s of this.allPlayerIdArr) {
+            if (s !== "") {
+                activeCount++;
+            }
+        }
+
+        if (activeCount <= 1) {
+            this.isGameOver = true;
+            this.isStarted = false;
+        }
     }
     public isRoundActive(): boolean {
         return this.bullets[this.currentBulletIndex] !== 0;
@@ -154,6 +182,8 @@ export class GameState implements Serializable {
             .to(this.gameId)
             .emit("shoot", isActive, this.currentActivePlayerId);
 
+        this.checkGameOver();
+
         this.nextBullet();
         this.rotateTable();
 
@@ -163,9 +193,8 @@ export class GameState implements Serializable {
     }
 
     public removePlayer(playerId: string) {
-        this.allPlayers.delete(playerId);
-        this.allPlayerIdArr = this.allPlayerIdArr.filter(
-            (id) => id !== playerId
+        this.allPlayerIdArr = this.allPlayerIdArr.map((prev) =>
+            prev === playerId ? "" : prev
         );
         if (this.isStarted)
             this.io.to(this.gameId).emit("update_state", this.serialize());

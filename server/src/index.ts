@@ -55,6 +55,10 @@ io.on("connection", (socket) => {
             if (!player || gameState.getCurrentPlayerId() !== player.getId())
                 return;
             player.useAbility(index, ownerId, stealIndex);
+            io.to(socket.data.gameId).emit(
+                "update_state",
+                gameState.serialize()
+            );
         }
     );
     socket.on("shoot_player", (playerId: string) => {

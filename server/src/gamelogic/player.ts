@@ -14,6 +14,8 @@ export class Player implements Serializable {
     private gameState: GameState;
     public socket: SocketType;
     private position: number;
+    public isAlive = true;
+
     constructor(
         gameState: GameState,
         socket: any,
@@ -37,8 +39,12 @@ export class Player implements Serializable {
     public getPosition() {
         return this.position;
     }
+    public resetAbilities() {
+        this.abilities = generateAbilities(this.gameState);
+    }
     // socket.io
     public shoot(playerId: string) {
+        if (!this.isAlive) return;
         try {
             this.gameState.shootPlayer(playerId);
         } catch (err) {
@@ -48,8 +54,12 @@ export class Player implements Serializable {
     public getShot(bullet: number) {
         this.lives -= bullet;
         console.log("getting shot", this.name, "bullet", bullet);
+        if (this.lives === 0) {
+            this.isAlive = false;
+        }
         return this.lives;
     }
+
     public getAbility(abilityIndex: number) {
         if (abilityIndex >= this.abilities.length) return null;
         return this.abilities[abilityIndex];
@@ -62,6 +72,7 @@ export class Player implements Serializable {
         playerId?: string,
         stealIndex?: number
     ) {
+        if (!this.isAlive) return;
         if (abilityIndex >= this.abilities.length) return;
         const ability = this.abilities[abilityIndex];
         // if our ability is steal then its different
@@ -76,13 +87,13 @@ export class Player implements Serializable {
         } else {
             ability.use();
         }
-        this.abilities = this.abilities.filter((_, i) => i === abilityIndex);
+        this.abilities = this.abilities.filter((_, i) => i !== abilityIndex);
     }
 
     public removeAbility(abilityIndex: number) {
         if (abilityIndex >= this.abilities.length) return;
 
-        this.abilities = this.abilities.filter((_, i) => i === abilityIndex);
+        this.abilities = this.abilities.filter((_, i) => i !== abilityIndex);
     }
     public serialize() {
         return {

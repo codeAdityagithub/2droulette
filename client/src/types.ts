@@ -21,4 +21,6 @@ export type GameState = {
     gameRound: number;
     currentPlayerId: string;
     allPlayers: PlayerType[];
+    isGameOver: boolean;
+    winnerId: string | null;
 };

@@ -30,6 +30,7 @@ const useGameLogic = () => {
     const [prevId, setPrevId] = useState(gameState?.currentPlayerId);
     const [gettingShotId, setGettingShotId] = useState("");
     const [isActive, setIsActive] = useState(false);
+
     useEffect(() => {
         const getGameState = (value: GameState) => {
             setGameState(value);

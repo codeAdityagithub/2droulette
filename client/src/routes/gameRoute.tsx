@@ -4,6 +4,9 @@ import Player from "../components/player";
 import Loading from "../components/loading";
 import useGameLogic from "../hooks/useGameLogic";
 import RoundInfo from "@/components/RoundInfo";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 const GameRoute = () => {
     const {
@@ -18,7 +21,13 @@ const GameRoute = () => {
         gettingShotRotation,
         isActive,
     } = useGameLogic();
-
+    const navigate = useNavigate();
+    useEffect(() => {
+        if (gameState?.isGameOver && gameState.winnerId) {
+            toast("Winner of the game was" + gameState.winnerId);
+            navigate("/", { replace: true });
+        }
+    }, [gameState]);
     return (
         <div className="w-full h-full overflow-hidden relative ">
             <Table />
