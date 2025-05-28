@@ -142,19 +142,22 @@ export class GameState implements Serializable {
                 return;
             }
 
-            this.allPlayers.get(playerId)?.socket.emit("getShot", playerId);
-
             if (lives === 0) {
                 this.removePlayer(playerId);
             }
         }
 
-        this.io.to(this.gameId).emit("shoot", isActive);
+        this.io.to(this.gameId).emit("getShot", playerId, isActive);
+        this.io
+            .to(this.gameId)
+            .emit("shoot", isActive, this.currentActivePlayerId);
 
         this.nextBullet();
         this.rotateTable();
 
-        this.io.to(this.gameId).emit("update_state", this.serialize());
+        setTimeout(() => {
+            this.io.to(this.gameId).emit("update_state", this.serialize());
+        }, 900);
     }
 
     public removePlayer(playerId: string) {

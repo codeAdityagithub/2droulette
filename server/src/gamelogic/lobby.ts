@@ -11,12 +11,19 @@ const MATCHMAKINGTIME = 1000 * 10;
 setInterval(() => {
     for (const [gameId, timeStamp] of timers) {
         const now = Date.now();
+        const gameState = lobbyMap.get(gameId);
+        if (!gameState) {
+            lobbyMap.delete(gameId);
+            timers.delete(gameId);
+            continue;
+        }
+
         if (now - timeStamp >= MATCHMAKINGTIME) {
-            const started = lobbyMap.get(gameId)?.startMatch();
-            if (!started) {
-                lobbyMap.delete(gameId);
-                timers.delete(gameId);
-            }
+            gameState.startMatch();
+            timers.delete(gameId);
+        } else if (gameState.isGameFull()) {
+            gameState.startMatch();
+            timers.delete(gameId);
         }
     }
 }, 5000);
@@ -49,10 +56,6 @@ export function addPlayer(socket: SocketType, io: IOType, name: string) {
             socket.data.gameId = gameState.getGameId();
             socket.data.playerId = player.getId();
             socket.join(gameState.getGameId());
-
-            if (gameState.isGameFull()) {
-                gameState.startMatch();
-            }
 
             return;
         }

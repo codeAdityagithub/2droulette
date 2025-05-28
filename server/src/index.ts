@@ -66,6 +66,7 @@ io.on("connection", (socket) => {
         gameState.shootPlayer(playerId);
     });
     socket.on("disconnect", () => {
+        console.log("removing player", socket.data.playerId);
         removeplayer(socket.data.gameId, socket.data.playerId);
     });
 });

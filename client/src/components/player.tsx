@@ -2,6 +2,7 @@ import type { PlayerType } from "../types";
 import sitting from "../assets/sitting.png";
 import withGun from "../assets/sitwgun.png";
 import shooting from "../assets/shooting.png";
+import blood from "../assets/blood.png";
 import Ability from "./ability";
 import LifeBar from "./lifebar";
 import arrow from "../assets/arrow.png";
@@ -13,14 +14,18 @@ const Player = ({
     player,
     activeId,
     canGetShot,
-    triggerShoot,
     isShooting,
+    gettingShotId,
+    gettingShotRotation,
+    isActive,
 }: {
     player: PlayerType;
     activeId: string;
     canGetShot: boolean;
-    triggerShoot: () => void;
     isShooting: boolean;
+    gettingShotId: string;
+    gettingShotRotation: string;
+    isActive: boolean;
 }) => {
     let angle;
     if (player.position === 2) angle = "";
@@ -35,25 +40,13 @@ const Player = ({
 
     const handleShoot = () => {
         if (canGetShot) socket.emit("shoot_player", player.playerId);
-        triggerShoot();
     };
     useEffect(() => {
         if (!isShooting)
             setActiveImage(player.playerId === activeId ? withGun : sitting);
     }, [player, activeId, isShooting]);
 
-    useEffect(() => {
-        const getShot = (playerId: string) => {
-            if (player.playerId === playerId) {
-                // get shot animation
-                console.log("geting shiot", player.playerName);
-            }
-        };
-        socket.on("getShot", getShot);
-        return () => {
-            socket.off("getShot", getShot);
-        };
-    }, []);
+    const isGettingShot = gettingShotId === player.playerId && isActive;
 
     return (
         <div
@@ -69,15 +62,27 @@ const Player = ({
                     />
                 </div>
             ) : null}
-            <img
-                src={isShooting ? shooting : activeImage}
-                onClick={handleShoot}
-                title={"Shoot " + player.playerName}
-                className={cn(
-                    canGetShot ? "hover:bg-red-400/80" : "hover:bg-gray-500/80",
-                    "aspect-auto w-20 h-28 z-30 transition-colors"
-                )}
-            ></img>
+            <div className="relative">
+                {isGettingShot ? (
+                    <img
+                        src={blood}
+                        alt=""
+                        className="absolute inset-0 w-20 h-20"
+                    />
+                ) : null}
+                <img
+                    src={isShooting ? shooting : activeImage}
+                    onClick={handleShoot}
+                    title={"Shoot " + player.playerName}
+                    className={cn(
+                        canGetShot
+                            ? "hover:bg-red-400/80"
+                            : "hover:bg-gray-500/80",
+                        isShooting ? gettingShotRotation : "",
+                        "aspect-auto w-20 h-28 z-30 transition-colors"
+                    )}
+                ></img>
+            </div>
             {/* {id == player.playerId ? "my" : "diff"} */}
             <div className="flex gap-2">
                 {player.abilities.map((ability, i) => (

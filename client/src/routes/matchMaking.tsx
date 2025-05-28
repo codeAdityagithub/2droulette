@@ -63,7 +63,7 @@ const MatchmakingLobby: React.FC = () => {
     }, []);
 
     return (
-        <div className="w-full h-full bg-background flex flex-col items-center py-10">
+        /*  <div className="w-full h-full bg-background flex flex-col items-center py-10">
             <h1 className="text-3xl font-bold mb-8">Matchmaking Lobby</h1>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                 {person.map(({ name, position }) => (
@@ -78,6 +78,33 @@ const MatchmakingLobby: React.FC = () => {
                             className="w-24 h-24 rounded-full mb-2"
                         />
                         <h2 className="text-lg font-semibold">{name}</h2>
+                    </div>
+                ))}
+            </div>
+        </div>*/
+        <div className="w-full h-full bg-gradient-to-b from-gray-900 via-gray-800 to-black text-white flex flex-col items-center py-10 min-h-screen">
+            <h1 className="text-4xl font-extrabold mb-10 tracking-widest text-yellow-400 animate-pulse">
+                🎯 Matchmaking Lobby
+            </h1>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 px-4">
+                {person.map(({ name, position }) => (
+                    <div
+                        key={position}
+                        className="flex flex-col items-center bg-white/5 backdrop-blur-md border border-gray-700 rounded-2xl p-6 shadow-xl hover:scale-105 hover:border-yellow-500 transition duration-300"
+                    >
+                        <div className="relative mb-4">
+                            <img
+                                // @ts-expect-error
+                                src={images[position]}
+                                alt={name}
+                                className="w-40 h-40 rounded-full border-4 border-yellow-400 shadow-lg"
+                            />
+                            <div className="absolute -top-2 -right-2 w-5 h-5 bg-green-500 rounded-full border-2 border-black animate-ping"></div>
+                        </div>
+                        <h2 className="text-xl font-bold text-yellow-300">
+                            {name}
+                        </h2>
                     </div>
                 ))}
             </div>
