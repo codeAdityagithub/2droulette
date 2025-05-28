@@ -92,6 +92,8 @@ export class GameState implements Serializable {
     }
     public rotateTable() {
         const inc = this.isSkipActive ? 2 : 1;
+        this.isSkipActive = false;
+
         this.currentActivePlayerIndex =
             (this.currentActivePlayerIndex + inc) % this.allPlayerIdArr.length;
 

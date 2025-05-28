@@ -83,6 +83,7 @@ const Player = ({
                     )}
                 ></img>
             </div>
+            <h2 className="text-2xl font-black">{player.position}</h2>
             {/* {id == player.playerId ? "my" : "diff"} */}
             <div className="flex gap-2">
                 {player.abilities.map((ability, i) => (

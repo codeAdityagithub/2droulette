@@ -90,16 +90,33 @@ const useGameLogic = () => {
         return map;
     }, [gameState]);
 
-    const gettingShotPosition = gameState?.allPlayers.find(
-        (p) => p.playerId === gettingShotId
-    )?.position;
+    const gettingShotPosition = useMemo(
+        () =>
+            gameState?.allPlayers.find((p) => p.playerId === gettingShotId)
+                ?.position,
+        [gameState, gettingShotId]
+    );
+    const currentPlayerPosition = useMemo(
+        () =>
+            gameState?.allPlayers.find((p) => p.playerId === prevId)?.position,
+        [gameState, prevId]
+    );
 
-    const gettingShotRotation =
-        gettingShotPosition === 1
-            ? "rotate-90"
-            : gettingShotPosition === 2
-            ? "rotate-45"
-            : "";
+    let gettingShotRotation = "";
+    if (currentPlayerPosition != undefined) {
+        if (gettingShotPosition === (currentPlayerPosition + 1) % 4) {
+            // console.log("shooting right");
+            gettingShotRotation = "rotate-45";
+        } else if (gettingShotPosition === (currentPlayerPosition + 2) % 4) {
+            // console.log("shooting top");
+            gettingShotRotation = "";
+        } else if (gettingShotPosition === (currentPlayerPosition + 3) % 4) {
+            // console.log("shooting left");
+            gettingShotRotation = "-rotate-45";
+        } else {
+            console.log("shoot himself");
+        }
+    }
 
     return {
         myPlayer,
