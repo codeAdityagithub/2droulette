@@ -16,11 +16,16 @@ export class StealAbility implements Ability {
         getterId?: string,
         abilityIndex?: number
     ): void {
-        if (getterId && abilityIndex && ownerId) {
+        if (
+            getterId != undefined &&
+            getterId != "" &&
+            abilityIndex != undefined &&
+            ownerId
+        ) {
             this.gameState.stealAbility(ownerId, getterId, abilityIndex);
         } else {
             // Optional: throw error or no-op
-            throw new Error("Missing parameters for StealAbility.use()");
+            return;
         }
     }
 

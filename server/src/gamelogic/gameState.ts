@@ -174,7 +174,7 @@ export class GameState implements Serializable {
                 return;
             }
 
-            if (lives === 0) {
+            if (lives <= 0) {
                 this.removePlayer(playerId);
             }
         }
@@ -256,7 +256,7 @@ export class GameState implements Serializable {
     ) {
         const owner = this.allPlayers.get(ownerId);
         const getter = this.allPlayers.get(getterId);
-        if (!owner || !getter) {
+        if (!owner || !getter || owner.getId() === getter.getId()) {
             return;
         }
         const ability = owner.getAbility(abilityIndex);

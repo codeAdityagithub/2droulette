@@ -49,6 +49,7 @@ const GameRoute = () => {
                                 gettingShotId={gettingShotId}
                                 gettingShotRotation={gettingShotRotation}
                                 isActive={isActive}
+                                allPlayers={gameState.allPlayers}
                             />
                         ) : null}
                     </div>
@@ -67,6 +68,7 @@ const GameRoute = () => {
                                 gettingShotId={gettingShotId}
                                 gettingShotRotation={gettingShotRotation}
                                 isActive={isActive}
+                                allPlayers={gameState.allPlayers}
                             />
                         ) : (
                             <div></div>
@@ -85,6 +87,7 @@ const GameRoute = () => {
                                 gettingShotId={gettingShotId}
                                 gettingShotRotation={gettingShotRotation}
                                 isActive={isActive}
+                                allPlayers={gameState.allPlayers}
                             />
                         ) : (
                             <div></div>
@@ -104,6 +107,7 @@ const GameRoute = () => {
                                 gettingShotId={gettingShotId}
                                 gettingShotRotation={gettingShotRotation}
                                 isActive={isActive}
+                                allPlayers={gameState.allPlayers}
                             />
                         ) : null}
                     </div>

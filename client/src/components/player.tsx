@@ -18,6 +18,7 @@ const Player = ({
     gettingShotId,
     gettingShotRotation,
     isActive,
+    allPlayers,
 }: {
     player: PlayerType;
     activeId: string;
@@ -26,6 +27,7 @@ const Player = ({
     gettingShotId: string;
     gettingShotRotation: string;
     isActive: boolean;
+    allPlayers: PlayerType[];
 }) => {
     let angle;
     if (player.position === 2) angle = "";
@@ -94,6 +96,7 @@ const Player = ({
                                 ability={ability}
                                 abilityIndex={i}
                                 key={ability.abilityName + i}
+                                allPlayers={allPlayers}
                             />
                         ))}
                     </div>
@@ -126,7 +129,6 @@ const Player = ({
                             )}
                         ></img>
                     </div>
-                    <h2 className="text-2xl font-black">{player.position}</h2>
                     {/* {id == player.playerId ? "my" : "diff"} */}
                     <div className="h-10"></div>
                 </div>
