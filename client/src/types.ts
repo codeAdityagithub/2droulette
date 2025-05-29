@@ -4,6 +4,7 @@ export type PlayerType = {
     livesLeft: number;
     abilities: AbilityType[];
     position: number;
+    isAlive: boolean;
 };
 
 export type AbilityName =
@@ -21,6 +22,4 @@ export type GameState = {
     gameRound: number;
     currentPlayerId: string;
     allPlayers: PlayerType[];
-    isGameOver: boolean;
-    winnerId: string | null;
 };

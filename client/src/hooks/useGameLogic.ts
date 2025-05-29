@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import type { GameState, PlayerType } from "../types";
 import { useSocket } from "./useSocket";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import { toast } from "sonner";
 import shoot from "../assets/shot.mp3";
 import empty from "../assets/empty.mp3";
@@ -30,7 +30,8 @@ const useGameLogic = () => {
     const [prevId, setPrevId] = useState(gameState?.currentPlayerId);
     const [gettingShotId, setGettingShotId] = useState("");
     const [isActive, setIsActive] = useState(false);
-
+    const navigate = useNavigate();
+    const [winner, setWinner] = useState<null | PlayerType>(null);
     useEffect(() => {
         const getGameState = (value: GameState) => {
             setGameState(value);
@@ -62,17 +63,23 @@ const useGameLogic = () => {
                 setIsActive(false);
             }, 1000);
         };
-
+        const gameover = (winner: PlayerType) => {
+            setTimeout(() => {
+                navigate("/");
+            }, 5000);
+            setWinner(winner);
+        };
         socket.on("getShot", getShot);
         socket.on("update_state", getGameState);
         socket.on("new_round", newRound);
         socket.on("shoot", shootSound);
-
+        socket.on("game_over", gameover);
         return () => {
             socket.off("update_state", getGameState);
             socket.off("new_round", newRound);
             socket.off("shoot", shootSound);
             socket.off("getShot", getShot);
+            socket.off("game_over", gameover);
         };
     }, [socket, gameState]);
     let rotate;
@@ -133,6 +140,7 @@ const useGameLogic = () => {
         gettingShotId,
         gettingShotRotation,
         isActive,
+        winner,
     } as const;
 };
 

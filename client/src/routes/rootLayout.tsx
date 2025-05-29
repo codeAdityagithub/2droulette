@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router";
 import { socket } from "../core/socket";
 import { useEffect, useRef, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 const RootLayout = () => {
     const [id, setId] = useState("");
@@ -15,6 +16,11 @@ const RootLayout = () => {
             !location.pathname.includes("game")
         ) {
             socket.emit("removeFromMatch");
+            toast("Match-Making failed", {
+                classNames: {
+                    toast: "!bg-red-400",
+                },
+            });
         }
         prevLocation.current = location.pathname;
     }, [location]);

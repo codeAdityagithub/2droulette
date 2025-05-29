@@ -73,10 +73,14 @@ export function addPlayer(socket: SocketType, io: IOType, name: string) {
         socket.join(game.getGameId());
     }
 }
+
+export function deleteGameState(gameId: string) {
+    lobbyMap.delete(gameId);
+}
 export function removeplayer(gameId: string, playerId: string) {
     const gameState = lobbyMap.get(gameId);
-    gameState?.removePlayer(playerId);
-    if (gameState?.getPlayerNumber() === 0) {
+    gameState?.deletePlayer(playerId);
+    if (gameState?.getPlayerNumber() ?? 0 <= 1) {
         lobbyMap.delete(gameId);
     }
 }

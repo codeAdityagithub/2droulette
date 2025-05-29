@@ -45,6 +45,9 @@ io.on("connection", (socket) => {
                 "matchMaking",
                 gameState.getMatchMaking()
             );
+        if (gameState?.getPlayerNumber ?? 0 <= 1) {
+            io.to(socket.data.gameId).emit("matchmaking_failed");
+        }
     });
     socket.on(
         "use_ability",
@@ -94,8 +97,9 @@ app.use("/static", express.static(path.join(__dirname, "../public")));
 app.get("/game/:gameid", (req, res) => {
     const gameid = req.params.gameid;
     const gamestate = getGameState(gameid);
-    if (!gamestate) {
-        return res.status(400);
+    if (!gamestate || gamestate.getPlayerNumber() <= 1) {
+        console.log("error not player");
+        return res.status(400).send("Error No Player");
     }
     const currRoundbulletinfo = gamestate.getCountBullets();
     return res.status(200).send({

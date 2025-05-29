@@ -5,12 +5,13 @@ import { useSocket } from "@/hooks/useSocket";
 const Ability = ({
     ability,
     isMyAbility,
-
+    isActivePlayer,
     abilityIndex,
 }: {
     ability: AbilityType;
     isMyAbility: boolean;
     abilityIndex: number;
+    isActivePlayer: boolean;
 }) => {
     const { socket } = useSocket();
     const useAbility = (
@@ -33,7 +34,7 @@ const Ability = ({
             }}
             title={ability.abilityName}
             className={cn(
-                isMyAbility
+                isMyAbility && isActivePlayer
                     ? "bg-green-300/80 hover:bg-green-300 transition-colors"
                     : "bg-gray-400",
                 "w-10 h-10 overflow-hidden border-2 rotate-180 rounded-md"
