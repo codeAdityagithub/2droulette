@@ -96,13 +96,9 @@ export class GameState implements Serializable {
             .emit("new_round", this.serialize(), this.getCountBullets());
     }
     public rotateTable() {
-        const inc = this.isSkipActive ? 2 : 1;
-        this.isSkipActive = false;
         this.currentActivePlayerIndex =
-            (this.currentActivePlayerIndex + inc) % this.allPlayerIdArr.length;
+            (this.currentActivePlayerIndex + 1) % this.allPlayerIdArr.length;
 
-        console.log("rotating table with ", inc);
-        console.log(this.allPlayerIdArr, this.currentActivePlayerIndex);
         while (
             this.allPlayerIdArr.length > 1 &&
             this.allPlayerIdArr[this.currentActivePlayerIndex] === ""
@@ -111,6 +107,22 @@ export class GameState implements Serializable {
             this.currentActivePlayerIndex =
                 (this.currentActivePlayerIndex + 1) %
                 this.allPlayerIdArr.length;
+        }
+
+        if (this.isSkipActive) {
+            this.currentActivePlayerIndex =
+                (this.currentActivePlayerIndex + 1) %
+                this.allPlayerIdArr.length;
+
+            while (
+                this.allPlayerIdArr.length > 1 &&
+                this.allPlayerIdArr[this.currentActivePlayerIndex] === ""
+            ) {
+                this.currentActivePlayerIndex =
+                    (this.currentActivePlayerIndex + 1) %
+                    this.allPlayerIdArr.length;
+            }
+            this.isSkipActive = false;
         }
 
         this.currentActivePlayerId =
@@ -212,15 +224,18 @@ export class GameState implements Serializable {
             this.io.to(this.gameId).emit("update_state", this.serialize());
     }
     public deletePlayer(playerId: string) {
-        this.allPlayerIdArr = this.allPlayerIdArr.filter(
-            (prev) => prev !== playerId
+        this.allPlayerIdArr = this.allPlayerIdArr.map((prev) =>
+            prev === playerId ? "" : prev
         );
         this.allPlayers.delete(playerId);
+
+        if (this.currentActivePlayerId === playerId) this.rotateTable();
+
         if (this.allPlayers.size <= 1) {
             this.isStarted = false;
         }
-        if (this.isStarted)
-            this.io.to(this.gameId).emit("update_state", this.serialize());
+
+        this.io.to(this.gameId).emit("update_state", this.serialize());
     }
     public addPlayer(player: Player) {
         if (this.allPlayers.size >= 4 || this.isStarted) {
@@ -256,7 +271,12 @@ export class GameState implements Serializable {
     ) {
         const owner = this.allPlayers.get(ownerId);
         const getter = this.allPlayers.get(getterId);
-        if (!owner || !getter || owner.getId() === getter.getId()) {
+        if (
+            !owner ||
+            !getter ||
+            owner.getId() === getter.getId() ||
+            !owner.isAlive
+        ) {
             return;
         }
         const ability = owner.getAbility(abilityIndex);

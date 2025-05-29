@@ -83,7 +83,7 @@ const Player = ({
                                     ? "hover:bg-red-400/80"
                                     : "hover:bg-gray-500/80",
                                 isShooting ? gettingShotRotation : "",
-                                "aspect-auto w-20 h-28 z-30 transition-colors"
+                                "aspect-auto w-20 h-28 z-30 transition-all duration-500"
                             )}
                         ></img>
                     </div>

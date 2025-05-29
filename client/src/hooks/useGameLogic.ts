@@ -82,6 +82,7 @@ const useGameLogic = () => {
             socket.off("game_over", gameover);
         };
     }, [socket, gameState]);
+
     let rotate;
     if (myPlayer?.position === 0) rotate = "";
     else if (myPlayer?.position === 2) rotate = "rotate-180";

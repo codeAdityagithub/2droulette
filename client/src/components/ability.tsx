@@ -27,12 +27,10 @@ const Ability = ({
     ) => {
         socket.emit("use_ability", index, ownerId, abilityIndex);
     };
-    const useAbility = (
-        index: number,
-        ownerId?: string,
-        abilityIndex?: number
-    ) => {
-        // ownerId if steal ability
+    const useAbility = (index: number) => {
+        // onerId if steal ability
+        if (!isActivePlayer) return;
+
         if (ability.abilityName === "StealAbility") {
             setOpen(true);
         } else {
@@ -67,6 +65,7 @@ const Ability = ({
                 open={open}
                 setOpen={setOpen}
                 allPlayers={allPlayers}
+                isActivePlayer={isActivePlayer}
             />
         </>
     );

@@ -22,6 +22,12 @@ const RootLayout = () => {
                 },
             });
         }
+        if (
+            prevLocation.current.includes("game") &&
+            !location.pathname.includes("game")
+        ) {
+            socket.emit("removeFromMatch");
+        }
         prevLocation.current = location.pathname;
     }, [location]);
 

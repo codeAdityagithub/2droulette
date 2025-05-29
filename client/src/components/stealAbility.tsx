@@ -20,12 +20,14 @@ const StealAbilityDialog = ({
     allPlayers,
     useAbility,
     ownAbilityIndex,
+    isActivePlayer,
 }: {
     setOpen: any;
     open: boolean;
     allPlayers: PlayerType[];
     ownAbilityIndex: number;
     useAbility: (index: number, ownerId: string, abilityIndex: number) => void;
+    isActivePlayer: boolean;
 }) => {
     const [ownerId, setOwnerId] = useState("");
     const [abilityIndex, stealAbilityIndex] = useState(-1);
@@ -57,16 +59,17 @@ const StealAbilityDialog = ({
                     <DialogTitle>Steal Ability of another player</DialogTitle>
                 </DialogHeader>
                 {allPlayers
-                    .filter((player) => player.playerId != id)
+                    .filter((player) => player.playerId != id && player.isAlive)
                     .map((player) => (
                         <div className="w-full h-full flex items-center justify-between flex-row gap-2">
                             <div>{player.playerName}</div>
                             <div className="flex gap-1">
                                 {player.abilities.map((ability, index) => (
                                     <div
-                                        onClick={() =>
-                                            handleClick(player.playerId, index)
-                                        }
+                                        onClick={() => {
+                                            if (!isActivePlayer) return;
+                                            handleClick(player.playerId, index);
+                                        }}
                                         key={index}
                                         className={cn(
                                             "w-full h-full bg-secondary p-2 rounded cursor-pointer",

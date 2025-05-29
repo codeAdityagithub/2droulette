@@ -54,7 +54,7 @@ export class Player implements Serializable {
     public getShot(bullet: number) {
         this.lives -= bullet;
         console.log("getting shot", this.name, "bullet", bullet);
-        if (this.lives === 0) {
+        if (this.lives <= 0) {
             this.isAlive = false;
         }
         return this.lives;
