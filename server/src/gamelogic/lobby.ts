@@ -40,6 +40,7 @@ export function addPlayer(socket: SocketType, io: IOType, name: string) {
         socket.data.gameId = game.getGameId();
         socket.data.playerId = player.getId();
         socket.join(game.getGameId());
+        socket.join(player.getId());
     } else {
         // traverse
         for (const gameState of lobbyMap.values()) {
@@ -56,6 +57,7 @@ export function addPlayer(socket: SocketType, io: IOType, name: string) {
             socket.data.gameId = gameState.getGameId();
             socket.data.playerId = player.getId();
             socket.join(gameState.getGameId());
+            socket.join(player.getId());
 
             return;
         }
@@ -71,6 +73,7 @@ export function addPlayer(socket: SocketType, io: IOType, name: string) {
         socket.data.gameId = game.getGameId();
         socket.data.playerId = player.getId();
         socket.join(game.getGameId());
+        socket.join(player.getId());
     }
 }
 

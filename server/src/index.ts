@@ -36,7 +36,12 @@ io.on("connection", (socket) => {
                 gameState.getMatchMaking()
             );
     });
-
+    socket.on("signal", ({ targetId, signal }) => {
+        io.to(targetId).emit("signal", {
+            sourceId: socket.data.playerId,
+            signal,
+        });
+    });
     socket.on("removeFromMatch", () => {
         removeplayer(socket.data.gameId, socket.data.playerId);
         const gameState = getGameState(socket.data.gameId);
@@ -75,6 +80,10 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         console.log("removing player", socket.data.playerId);
         removeplayer(socket.data.gameId, socket.data.playerId);
+        io.to(socket.data.gameId).emit(
+            "user-disconnected",
+            socket.data.playerId
+        );
     });
 });
 

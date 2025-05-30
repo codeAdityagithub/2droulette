@@ -5,6 +5,7 @@ import Loading from "../components/loading";
 import useGameLogic from "../hooks/useGameLogic";
 import RoundInfo from "@/components/RoundInfo";
 import GameOverDialog from "@/components/GameOverDialog";
+import VoiceChatToggle from "@/components/VoiceChatToggle";
 
 const GameRoute = () => {
     const {
@@ -19,11 +20,20 @@ const GameRoute = () => {
         gettingShotRotation,
         isActive,
         winner,
+        myPlayer,
     } = useGameLogic();
+
+    const otherPlayers =
+        gameState?.allPlayers.filter((p) => p.playerId != myPlayer?.playerId) ??
+        null;
 
     return (
         <div className="w-full h-full overflow-hidden relative ">
             <Table />
+            <VoiceChatToggle
+                myPlayer={myPlayer}
+                otherPlayers={otherPlayers}
+            />
             <GameOverDialog winner={winner} />
             <div className="absolute w-full top-8 left-8 text-4xl font-bold font-mono">
                 Round {gameState?.gameRound}
