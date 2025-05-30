@@ -1,10 +1,8 @@
-import { AbilityName } from "./ability";
 import { Player } from "./player";
 import getRandomBullets from "./utils/getRandomBullets";
 import { Serializable } from "./utils/serializable";
 import { v4 as uuidv4 } from "uuid";
-import type { IOType, SocketType } from "../types";
-import { deleteGameState } from "./lobby";
+import type { IOType } from "../types";
 
 export class GameState implements Serializable {
     private gameId: string;
@@ -154,6 +152,14 @@ export class GameState implements Serializable {
         if (activeCount <= 1) {
             this.isGameOver = true;
             this.isStarted = false;
+
+            let winner: any = null;
+            for (const player of this.allPlayers.values()) {
+                if (player.isAlive) {
+                    winner = player.serialize();
+                }
+            }
+            this.io.to(this.gameId).emit("game_over", winner);
             return true;
         }
         return false;
@@ -196,18 +202,8 @@ export class GameState implements Serializable {
             .to(this.gameId)
             .emit("shoot", isActive, this.currentActivePlayerId);
 
-        const isOver = this.checkGameOver();
-        if (isOver) {
-            let winner: any = null;
-            for (const player of this.allPlayers.values()) {
-                if (player.isAlive) {
-                    winner = player.serialize();
-                }
-            }
-            deleteGameState(this.gameId);
-            this.io.to(this.gameId).emit("game_over", winner);
-            return;
-        }
+        this.checkGameOver();
+
         this.nextBullet();
         this.rotateTable();
 
@@ -234,7 +230,6 @@ export class GameState implements Serializable {
         if (this.allPlayers.size <= 1) {
             this.isStarted = false;
         }
-
         this.io.to(this.gameId).emit("update_state", this.serialize());
     }
     public addPlayer(player: Player) {

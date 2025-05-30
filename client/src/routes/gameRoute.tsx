@@ -25,7 +25,7 @@ const GameRoute = () => {
         <div className="w-full h-full overflow-hidden relative ">
             <Table />
             <GameOverDialog winner={winner} />
-            <div className="absolute w-full top-8 text-center text-4xl font-bold">
+            <div className="absolute w-full top-8 left-8 text-4xl font-bold font-mono">
                 Round {gameState?.gameRound}
             </div>
             <RoundInfo currentRoundbulletinfo={currentRoundbulletinfo} />

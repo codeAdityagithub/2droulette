@@ -32,6 +32,7 @@ const useGameLogic = () => {
     const [isActive, setIsActive] = useState(false);
     const navigate = useNavigate();
     const [winner, setWinner] = useState<null | PlayerType>(null);
+
     useEffect(() => {
         const getGameState = (value: GameState) => {
             setGameState(value);

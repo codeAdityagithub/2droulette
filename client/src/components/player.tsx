@@ -87,7 +87,6 @@ const Player = ({
                             )}
                         ></img>
                     </div>
-                    {/* {id == player.playerId ? "my" : "diff"} */}
                     <div className="flex gap-2">
                         {player.abilities.map((ability, i) => (
                             <Ability
@@ -100,6 +99,9 @@ const Player = ({
                             />
                         ))}
                     </div>
+                    <h1 className="absolute -bottom-4 rotate-180 text-lg font-semibold font-mono text-gray-700 border px-1 shadow-md rounded capitalize">
+                        {player.playerName}
+                    </h1>
                 </div>
             ) : (
                 <div

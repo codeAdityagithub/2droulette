@@ -79,8 +79,14 @@ export function deleteGameState(gameId: string) {
 }
 export function removeplayer(gameId: string, playerId: string) {
     const gameState = lobbyMap.get(gameId);
-    gameState?.deletePlayer(playerId);
-    if (gameState?.getPlayerNumber() ?? 0 <= 1) {
+    if (!gameState) {
+        return;
+    }
+    gameState.deletePlayer(playerId);
+    const over = gameState.checkGameOver();
+
+    if (over) {
+        console.log("deleting from lobby game");
         lobbyMap.delete(gameId);
     }
 }
