@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import SimplePeer from "simple-peer";
 import { useSocket } from "../hooks/useSocket";
 import type { PlayerType } from "@/types";
 import { Button } from "./ui/button";
+import { Mic, MicOff } from "lucide-react";
 
 type UseVoiceChatOptions = {
     otherPlayers: PlayerType[] | null;
@@ -19,79 +20,165 @@ export default function VoiceChatToggle({
         [peerId: string]: MediaStream;
     }>({});
     const [enabled, setEnabled] = useState(false);
-    const localAudioRef = useRef<HTMLAudioElement>(null);
     const { socket } = useSocket();
-    const onPeerStream = (peerId: string, stream: MediaStream) => {
-        setRemoteStreams((prev) => ({ ...prev, [peerId]: stream }));
-    };
-    const onPeerDisconnect = (peerId: string) => {
-        setRemoteStreams((prev) => {
-            const { [peerId]: _, ...rest } = prev;
-            return rest;
+
+    const signalBuffer = useRef<{ sourceId: string; signal: any }[]>([]);
+
+    const muteLocalStream = useCallback(() => {
+        if (!localStreamRef.current) return;
+
+        localStreamRef.current?.getAudioTracks().forEach((t) => {
+            t.enabled = false;
         });
-    };
+        const silentTrack = localStreamRef.current.getTracks()[0];
 
-    const handleSignal = ({
-        sourceId,
-        signal,
-    }: {
-        sourceId: string;
-        signal: any;
-    }) => {
-        if (!otherPlayers || !localStreamRef.current || !myPlayer) return;
+        Object.values(peersRef.current).forEach((peer) => {
+            // @ts-expect-error
+            const pc = peer._pc as RTCPeerConnection;
+            const sender = pc
+                .getSenders()
+                .find((s) => s.track?.kind === "audio");
+            if (sender) {
+                sender.replaceTrack(silentTrack);
+            }
+        });
+    }, []);
 
-        let peer = peersRef.current[sourceId];
-        if (!peer) {
-            const otherPlayer = otherPlayers.find(
-                (p) => p.playerId === sourceId
-            );
-            if (!otherPlayer) return;
+    const unmuteLocalStream = useCallback(() => {
+        if (!localStreamRef.current) return;
 
-            const isInitiator = otherPlayer.position > myPlayer.position;
+        localStreamRef.current?.getAudioTracks().forEach((t) => {
+            t.enabled = true;
+        });
+        const realTrack = localStreamRef.current.getAudioTracks()[0];
 
-            peer = createPeer(sourceId, localStreamRef.current, isInitiator);
-            peersRef.current[sourceId] = peer;
-        }
-        peer.signal(signal);
-    };
+        Object.values(peersRef.current).forEach((peer) => {
+            // @ts-expect-error
+            const pc = peer._pc as RTCPeerConnection;
+            const sender = pc
+                .getSenders()
+                .find((s) => s.track?.kind === "audio");
+            if (sender) {
+                sender.replaceTrack(realTrack);
+            }
+        });
+    }, []);
 
-    const handleDisconnect = (id: string) => {
-        if (peersRef.current[id]) {
-            peersRef.current[id].destroy();
-            delete peersRef.current[id];
-            onPeerDisconnect?.(id);
-        }
-    };
-    const cleanup = () => {
+    const leaveVoiceChat = useCallback(() => {
+        localStreamRef.current?.getTracks().forEach((track) => track.stop());
+        localStreamRef.current = null;
         Object.entries(peersRef.current).forEach(([id, peer]) => {
             peer.destroy();
             delete peersRef.current[id];
         });
-        socket.off("signal", handleSignal);
-        socket.off("user-disconnected", handleDisconnect);
-    };
+        setRemoteStreams({});
+    }, []);
 
-    const setupVoice = async () => {
-        if (!otherPlayers || otherPlayers.length === 0 || !myPlayer) return;
+    const onPeerStream = useCallback((peerId: string, stream: MediaStream) => {
+        setRemoteStreams((prev) => ({ ...prev, [peerId]: stream }));
+    }, []);
+
+    const onPeerDisconnect = useCallback((peerId: string) => {
+        setRemoteStreams((prev) => {
+            const { [peerId]: _, ...rest } = prev;
+            return rest;
+        });
+    }, []);
+
+    const createPeer = useCallback(
+        (
+            peerId: string,
+            stream: MediaStream | undefined,
+            initiator: boolean
+        ) => {
+            const peer = new SimplePeer({ initiator, trickle: false, stream });
+
+            peer.on("signal", (signal) => {
+                socket.emit("signal", { targetId: peerId, signal });
+            });
+
+            peer.on("stream", (remoteStream) => {
+                onPeerStream(peerId, remoteStream);
+            });
+            peer.on("connect", () => {
+                console.log(
+                    "connected to",
+                    otherPlayers?.find((p) => p.playerId === peerId)?.position
+                );
+            });
+            peer.on("close", () => {
+                delete peersRef.current[peerId];
+                console.log(
+                    "disconnected with",
+                    otherPlayers?.find((p) => p.playerId === peerId)?.position
+                );
+                onPeerDisconnect(peerId);
+            });
+
+            peer.on("error", (err) => {
+                console.error(`Peer ${peerId} error:`, err);
+            });
+
+            return peer;
+        },
+        [onPeerStream, onPeerDisconnect, socket]
+    );
+
+    const handleSignal = useCallback(
+        ({ sourceId, signal }: { sourceId: string; signal: any }) => {
+            if (!otherPlayers || !localStreamRef.current || !myPlayer) {
+                signalBuffer.current.push({ sourceId, signal });
+                return;
+            }
+
+            let peer = peersRef.current[sourceId];
+            if (!peer) {
+                const otherPlayer = otherPlayers.find(
+                    (p) => p.playerId === sourceId
+                );
+                if (!otherPlayer) return;
+
+                const isInitiator = otherPlayer.position > myPlayer.position;
+                peer = createPeer(
+                    sourceId,
+                    localStreamRef.current,
+                    isInitiator
+                );
+                peersRef.current[sourceId] = peer;
+            }
+
+            peer.signal(signal);
+        },
+        [otherPlayers, myPlayer, createPeer]
+    );
+
+    const handleDisconnect = useCallback(
+        (id: string) => {
+            if (peersRef.current[id]) {
+                peersRef.current[id].destroy();
+                delete peersRef.current[id];
+                onPeerDisconnect(id);
+            }
+        },
+        [onPeerDisconnect]
+    );
+
+    const setupVoice = useCallback(async () => {
+        if (!otherPlayers || !myPlayer || localStreamRef.current) return;
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
             });
             localStreamRef.current = stream;
+            muteLocalStream();
 
-            // Create peers for each player
             for (const player of otherPlayers) {
                 if (!peersRef.current[player.playerId]) {
                     const isInitiator = player.position > myPlayer.position;
                     const peer = createPeer(
                         player.playerId,
-                        stream,
-                        isInitiator
-                    );
-                    console.log(
-                        "Creating peer for",
-                        player.position,
-                        "as init:",
+                        localStreamRef.current,
                         isInitiator
                     );
                     peersRef.current[player.playerId] = peer;
@@ -100,82 +187,56 @@ export default function VoiceChatToggle({
         } catch (err) {
             console.warn("Could not access mic", err);
         }
-    };
+    }, [otherPlayers, myPlayer, createPeer, muteLocalStream]);
+
+    const toggle = useCallback(async () => {
+        if (enabled) {
+            muteLocalStream();
+            setEnabled(false);
+        } else {
+            if (!localStreamRef.current) {
+                await setupVoice();
+            }
+            unmuteLocalStream();
+            setEnabled(true);
+        }
+    }, [enabled, muteLocalStream, unmuteLocalStream, setupVoice]);
+
+    useEffect(() => {
+        setupVoice();
+    }, [setupVoice]);
+
+    useEffect(() => {
+        if (!otherPlayers || !myPlayer || !localStreamRef.current) return;
+
+        // Flush buffered signals
+        for (const { sourceId, signal } of signalBuffer.current) {
+            handleSignal({ sourceId, signal });
+        }
+        signalBuffer.current = [];
+    }, [otherPlayers, myPlayer, localStreamRef.current]);
 
     useEffect(() => {
         socket.on("signal", handleSignal);
         socket.on("user-disconnected", handleDisconnect);
+        return () => {
+            socket.off("signal", handleSignal);
+            socket.off("user-disconnected", handleDisconnect);
+            leaveVoiceChat();
+        };
+    }, [socket, handleSignal, handleDisconnect, leaveVoiceChat]);
 
-        return cleanup;
-    }, [socket, myPlayer, otherPlayers]); // ensure rerun only if player list actually changes
-
-    const stop = () => {
-        localStreamRef.current?.getTracks().forEach((t) => t.stop());
-        localStreamRef.current = null;
-        cleanup();
-    };
-    const toggle = () => {
-        if (enabled) {
-            stop();
-            setEnabled(false);
-        } else {
-            setEnabled(true);
-            setupVoice();
-        }
-    };
-
-    function createPeer(
-        peerId: string,
-        stream: MediaStream,
-        initiator: boolean
-    ) {
-        const peer = new SimplePeer({ initiator, trickle: false, stream });
-
-        peer.on("signal", (signal) => {
-            console.log(
-                initiator ? "sending offer to " : "sending answer to",
-                otherPlayers?.find((p) => p.playerId === peerId)?.position
-            );
-            socket.emit("signal", { targetId: peerId, signal });
-        });
-        peer.on("connect", () => {
-            console.log(
-                "connected to",
-                otherPlayers?.find((p) => p.playerId === peerId)?.position
-            );
-        });
-        peer.on("stream", (remoteStream) => {
-            onPeerStream?.(peerId, remoteStream);
-        });
-
-        peer.on("close", () => {
-            if (peersRef.current[peerId]) {
-                delete peersRef.current[peerId];
-                onPeerDisconnect?.(peerId);
-            }
-        });
-
-        peer.on("error", (err) => {
-            console.error(`Peer ${peerId} error:`, err);
-        });
-
-        return peer;
-    }
-    console.log(remoteStreams);
     return (
-        <div className="fixed inset-0 z-50">
-            <Button onClick={toggle}>
-                {enabled ? "Stop Voice Chat" : "Start Voice Chat"}
+        <div className="fixed left-8 bottom-8 z-50">
+            <Button
+                size="icon"
+                onClick={toggle}
+                title={enabled ? "Mute Your Mic" : "Unmute Your Mic"}
+            >
+                {enabled ? <Mic /> : <MicOff />}
             </Button>
 
-            {/* Hidden local audio */}
-            <audio
-                ref={localAudioRef}
-                autoPlay
-                muted
-            />
-
-            {/* Render remote peers */}
+            {/* Remote peer audio elements */}
             {Object.entries(remoteStreams).map(([id, stream]) => (
                 <VoicePlayer
                     key={id}

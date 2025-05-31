@@ -37,6 +37,7 @@ io.on("connection", (socket) => {
             );
     });
     socket.on("signal", ({ targetId, signal }) => {
+        console.log("signal from ", targetId);
         io.to(targetId).emit("signal", {
             sourceId: socket.data.playerId,
             signal,

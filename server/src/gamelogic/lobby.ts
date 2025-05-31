@@ -6,7 +6,7 @@ import { Player } from "./player";
 const lobbyMap = singleton("lobby", () => new Map<string, GameState>());
 
 const timers = singleton("times", () => new Map<string, number>());
-const MATCHMAKINGTIME = 1000 * 10;
+const MATCHMAKINGTIME = 1000 * 5;
 
 setInterval(() => {
     for (const [gameId, timeStamp] of timers) {
