@@ -44,7 +44,10 @@ const RootLayout = () => {
     }, []);
     return (
         <div className="w-full h-svh bg-amber-50 flex justify-center items-center">
-            <Toaster />
+            <Toaster
+                richColors
+                position="top-center"
+            />
             <Outlet context={{ socket, id }} />
         </div>
     );

@@ -34,6 +34,7 @@ const StealAbilityDialog = ({
     const { id } = useSocket();
     const handleClick = (ownerId: string, abilityIndex: number) => {
         setOwnerId(ownerId);
+
         stealAbilityIndex(abilityIndex);
     };
 
@@ -61,7 +62,10 @@ const StealAbilityDialog = ({
                 {allPlayers
                     .filter((player) => player.playerId != id && player.isAlive)
                     .map((player) => (
-                        <div className="w-full h-full flex items-center justify-between flex-row gap-2">
+                        <div
+                            key={player.playerId}
+                            className="w-full h-full flex items-center justify-between flex-row gap-2"
+                        >
                             <div>{player.playerName}</div>
                             <div className="flex gap-1">
                                 {player.abilities.map((ability, index) => (
@@ -97,12 +101,12 @@ const StealAbilityDialog = ({
                     >
                         Cancel
                     </DialogClose>
-                    <Button
+                    <DialogClose
                         disabled={ownerId === "" || abilityIndex == -1}
                         onClick={handleUse}
                     >
                         Steal Ability
-                    </Button>
+                    </DialogClose>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

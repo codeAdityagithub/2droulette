@@ -3,6 +3,7 @@ import type { AbilityType, PlayerType } from "../types";
 import { useSocket } from "@/hooks/useSocket";
 import { useState } from "react";
 import StealAbilityDialog from "./stealAbility";
+import sound from "@/assets/ability.mp3";
 
 const Ability = ({
     ability,
@@ -30,7 +31,8 @@ const Ability = ({
     const useAbility = (index: number) => {
         // onerId if steal ability
         if (!isActivePlayer) return;
-
+        const audio = new Audio(sound);
+        audio.play();
         if (ability.abilityName === "StealAbility") {
             setOpen(true);
         } else {
