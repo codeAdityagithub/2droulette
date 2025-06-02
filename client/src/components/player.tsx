@@ -1,7 +1,16 @@
 import type { PlayerType } from "../types";
-import sitting from "../assets/sitting.png";
-import withGun from "../assets/sitwgun.png";
-import shooting from "../assets/shooting.png";
+import person1sitting from "../assets/person1sitting.png";
+import person1wgun from "../assets/person1wgun.png";
+import person1shooting from "../assets/person1shooting.png";
+import person2sitting from "../assets/person2sitting.png";
+import person2wgun from "../assets/person2wgun.png";
+import person2shooting from "../assets/person2shooting.png";
+import person3sitting from "../assets/person3sitting.png";
+import person3wgun from "../assets/person3wgun.png";
+import person3shooting from "../assets/person3shooting.png";
+import person4sitting from "../assets/person4sitting.png";
+import person4wgun from "../assets/person4wgun.png";
+import person4shooting from "../assets/person4shooting.png";
 import blood from "../assets/blood.png";
 import Ability from "./ability";
 import LifeBar from "./lifebar";
@@ -9,6 +18,30 @@ import arrow from "../assets/arrow.png";
 import { useSocket } from "@/hooks/useSocket";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+
+const playerImages = [
+    {
+        sitting: person1sitting,
+        sittingwithgun: person1wgun,
+        shooting: person1shooting,
+    },
+    {
+        sitting: person2sitting,
+        sittingwithgun: person2wgun,
+        shooting: person2shooting,
+    },
+
+    {
+        sitting: person3sitting,
+        sittingwithgun: person3wgun,
+        shooting: person3shooting,
+    },
+    {
+        sitting: person4sitting,
+        sittingwithgun: person4wgun,
+        shooting: person4shooting,
+    },
+];
 
 const Player = ({
     player,
@@ -36,7 +69,9 @@ const Player = ({
     else angle = "rotate-180";
     const { id, socket } = useSocket();
 
-    const [activeImage, setActiveImage] = useState(sitting);
+    const [activeImage, setActiveImage] = useState(
+        playerImages[player.position].sitting
+    );
 
     const isMyPlayer = id === player.playerId;
 
@@ -45,7 +80,11 @@ const Player = ({
     };
     useEffect(() => {
         if (!isShooting)
-            setActiveImage(player.playerId === activeId ? withGun : sitting);
+            setActiveImage(
+                player.playerId === activeId
+                    ? playerImages[player.position].sittingwithgun
+                    : playerImages[player.position].sitting
+            );
     }, [player, activeId, isShooting]);
 
     const isGettingShot = gettingShotId === player.playerId && isActive;
@@ -75,7 +114,11 @@ const Player = ({
                             />
                         ) : null}
                         <img
-                            src={isShooting ? shooting : activeImage}
+                            src={
+                                isShooting
+                                    ? playerImages[player.position].shooting
+                                    : activeImage
+                            }
                             onClick={handleShoot}
                             title={"Shoot " + player.playerName}
                             className={cn(
@@ -124,7 +167,7 @@ const Player = ({
                             className="absolute inset-0 w-20 h-20"
                         />
                         <img
-                            src={sitting}
+                            src={playerImages[player.position].sitting}
                             title={"Dead " + player.playerName}
                             className={cn(
                                 "aspect-auto w-20 h-28 z-30 transition-colors hover:bg-gray-500/80"

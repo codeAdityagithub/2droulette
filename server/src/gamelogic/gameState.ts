@@ -17,8 +17,13 @@ export class GameState implements Serializable {
     private isSkipActive = false;
     private io: IOType;
     private isGameOver = false;
+    private readyState: Map<string, boolean>;
+    private readyTimeout: NodeJS.Timeout;
+    private initiated = false;
     constructor(io: IOType) {
         this.gameId = uuidv4();
+        this.readyState = new Map();
+
         this.gameRound = 1;
         this.bullets = getRandomBullets();
         this.currentBulletIndex = 0;
@@ -29,6 +34,34 @@ export class GameState implements Serializable {
     }
     public getGameId() {
         return this.gameId;
+    }
+    public setPlayerReady(id: string) {
+        if (this.readyTimeout) {
+            clearTimeout(this.readyTimeout);
+        }
+        this.readyState.set(id, true);
+
+        if (this.initiated) return;
+        if (this.areAllPlayersReady()) {
+            this.readyTimeout = setTimeout(() => {
+                this.initiated = true;
+                this.io.to(this.gameId).emit("init_connect");
+            }, 500);
+        }
+    }
+    public unReadyPlayer(id: string) {
+        this.readyState.set(id, false);
+        if (this.readyTimeout) {
+            clearTimeout(this.readyTimeout);
+        }
+    }
+    public areAllPlayersReady() {
+        if (this.readyState.size != this.allPlayers.size) return false;
+
+        for (const [_, val] of this.readyState) {
+            if (val === false) return false;
+        }
+        return true;
     }
     public getCountBullets() {
         let active = 0;
@@ -96,8 +129,9 @@ export class GameState implements Serializable {
     public rotateTable() {
         this.currentActivePlayerIndex =
             (this.currentActivePlayerIndex + 1) % this.allPlayerIdArr.length;
-
+        let loopcount = 0;
         while (
+            loopcount < 10 &&
             this.allPlayerIdArr.length > 1 &&
             this.allPlayerIdArr[this.currentActivePlayerIndex] === ""
         ) {
@@ -105,20 +139,23 @@ export class GameState implements Serializable {
             this.currentActivePlayerIndex =
                 (this.currentActivePlayerIndex + 1) %
                 this.allPlayerIdArr.length;
+            loopcount++;
         }
-
         if (this.isSkipActive) {
             this.currentActivePlayerIndex =
                 (this.currentActivePlayerIndex + 1) %
                 this.allPlayerIdArr.length;
 
+            loopcount = 0;
             while (
+                loopcount < 10 &&
                 this.allPlayerIdArr.length > 1 &&
                 this.allPlayerIdArr[this.currentActivePlayerIndex] === ""
             ) {
                 this.currentActivePlayerIndex =
                     (this.currentActivePlayerIndex + 1) %
                     this.allPlayerIdArr.length;
+                loopcount++;
             }
             this.isSkipActive = false;
         }
@@ -224,6 +261,7 @@ export class GameState implements Serializable {
             prev === playerId ? "" : prev
         );
         this.allPlayers.delete(playerId);
+        this.readyState.delete(playerId);
 
         if (this.currentActivePlayerId === playerId) this.rotateTable();
 
@@ -237,6 +275,8 @@ export class GameState implements Serializable {
             throw new Error("Already full");
         }
         this.allPlayerIdArr.push(player.getId());
+        this.readyState[player.getId()] = false;
+
         if (this.currentActivePlayerId === "") {
             this.currentActivePlayerId = player.getId();
         }
@@ -257,7 +297,7 @@ export class GameState implements Serializable {
         } else this.bullets[this.currentBulletIndex] = 1;
     }
     public doubleBullet() {
-        this.bullets[this.currentBulletIndex] *= 2;
+        if (this.isRoundActive()) this.bullets[this.currentBulletIndex] = 2;
     }
     public stealAbility(
         ownerId: string,

@@ -5,7 +5,7 @@ import Loading from "../components/loading";
 import useGameLogic from "../hooks/useGameLogic";
 import RoundInfo from "@/components/RoundInfo";
 import GameOverDialog from "@/components/GameOverDialog";
-import VoiceChatToggle from "@/components/VoiceChatToggle";
+import VoiceChatToggle from "@/components/VoiceAndChat";
 
 const GameRoute = () => {
     const {

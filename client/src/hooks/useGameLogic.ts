@@ -124,7 +124,7 @@ const useGameLogic = () => {
             // console.log("shooting left");
             gettingShotRotation = "-rotate-45";
         } else {
-            console.log("shoot himself");
+            // console.log("shoot himself");
         }
     }
 

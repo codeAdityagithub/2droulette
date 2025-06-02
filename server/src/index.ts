@@ -37,11 +37,23 @@ io.on("connection", (socket) => {
             );
     });
     socket.on("signal", ({ targetId, signal }) => {
-        console.log("signal from ", targetId);
         io.to(targetId).emit("signal", {
             sourceId: socket.data.playerId,
             signal,
         });
+    });
+
+    socket.on("ready", () => {
+        const gameState = getGameState(socket.data.gameId);
+        gameState?.setPlayerReady(socket.data.playerId);
+    });
+    socket.on("unready", () => {
+        const gameState = getGameState(socket.data.gameId);
+        gameState?.unReadyPlayer(socket.data.playerId);
+    });
+
+    socket.on("initiated", (toPlayer: string) => {
+        io.to(toPlayer).emit("initiate_peer", socket.data.playerId);
     });
     socket.on("removeFromMatch", () => {
         removeplayer(socket.data.gameId, socket.data.playerId);
