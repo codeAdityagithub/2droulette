@@ -20,10 +20,11 @@ export class GameState implements Serializable {
     private readyState: Map<string, boolean>;
     private readyTimeout: NodeJS.Timeout;
     private initiated = false;
-    constructor(io: IOType) {
+    public isPrivate: boolean;
+    constructor(io: IOType, isPrivate: boolean) {
         this.gameId = uuidv4();
         this.readyState = new Map();
-
+        this.isPrivate = isPrivate;
         this.gameRound = 1;
         this.bullets = getRandomBullets();
         this.currentBulletIndex = 0;
@@ -83,6 +84,7 @@ export class GameState implements Serializable {
         for (const player of this.allPlayers.values()) {
             matchMaking.push({
                 name: player.getName(),
+                id: player.getId(),
                 position: player.getPosition(),
             });
         }

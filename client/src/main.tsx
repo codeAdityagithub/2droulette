@@ -37,6 +37,19 @@ const router = createBrowserRouter([
             },
             {
                 path: "/matchmaking/:gameId",
+                loader: async ({ params }) => {
+                    try {
+                        return (
+                            await axios.get(
+                                `${import.meta.env.VITE_API_URL}/matchmaking/${
+                                    params.gameId
+                                }`
+                            )
+                        ).data;
+                    } catch (error) {
+                        return redirect("/");
+                    }
+                },
                 element: <MatchMaking />,
             },
         ],

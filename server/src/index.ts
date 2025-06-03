@@ -9,6 +9,7 @@ import { config } from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { addPlayer, getGameState, removeplayer } from "./gamelogic/lobby";
+import { Player } from "./gamelogic/player";
 
 config();
 
@@ -23,18 +24,66 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket) => {
-    socket.on("join", (name) => {
-        addPlayer(socket, io, name);
+    socket.on("join", (name, isPrivate?: boolean) => {
+        if (socket.data.playerId) {
+            socket.leave(socket.data.playerId);
+        }
+        if (socket.data.gameId) {
+            socket.leave(socket.data.gameId);
+        }
+        addPlayer(socket, io, name, isPrivate);
         socket.emit("getId", socket.data.playerId);
         socket.emit("gameId", socket.data.gameId);
     });
+    socket.on("join_game", (name: string, gameId: string) => {
+        if (socket.data.gameId === gameId) return;
+        if (socket.data.playerId) {
+            socket.leave(socket.data.playerId);
+        }
+        if (socket.data.gameId) {
+            socket.leave(socket.data.gameId);
+        }
+
+        const gameState = getGameState(gameId);
+        if (gameState) {
+            const player = new Player(
+                gameState,
+                socket,
+                gameState.getPlayerNumber(),
+                name
+            );
+            gameState.addPlayer(player);
+
+            socket.data.gameId = gameState.getGameId();
+            socket.data.playerId = player.getId();
+            socket.join(gameState.getGameId());
+            socket.join(player.getId());
+            socket.emit("getId", socket.data.playerId);
+            socket.emit("gameId", socket.data.gameId);
+        }
+    });
+    socket.on("start_match", () => {
+        const gameState = getGameState(socket.data.gameId);
+        if (!gameState || !gameState.isPrivate || gameState.isGameStarted())
+            return;
+
+        const player = gameState.getPlayer(socket.data.playerId);
+        if (player?.getPosition() !== 0) return;
+
+        gameState.startMatch();
+    });
     socket.on("getMatchMaking", () => {
         const gameState = getGameState(socket.data.gameId);
-        if (gameState)
+
+        if (gameState) {
+            const player = gameState.getPlayer(socket.data.playerId);
+            if (!player) return;
+
             io.to(socket.data.gameId).emit(
                 "matchMaking",
                 gameState.getMatchMaking()
             );
+        }
     });
     socket.on("signal", ({ targetId, signal }) => {
         io.to(targetId).emit("signal", {
@@ -128,6 +177,16 @@ app.get("/game/:gameid", (req, res) => {
         gamestate: gamestate.serialize(),
         currRoundbulletinfo: currRoundbulletinfo,
     });
+});
+// @ts-expect-error
+app.get("/matchmaking/:gameid", (req, res) => {
+    const gameid = req.params.gameid;
+    const gamestate = getGameState(gameid);
+    if (!gamestate) {
+        console.log("error not player");
+        return res.status(400).send("Error No Player");
+    }
+    return res.status(200).json({ isPrivate: gamestate.isPrivate });
 });
 
 const PORT = process.env.PORT || 8080;

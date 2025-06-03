@@ -1,10 +1,30 @@
-import { Button } from "./ui/button";
 import title from "../assets/title.png";
 import bg from "../assets/bg.jpg";
 
 import JoinGameButton from "./JoinGameButton";
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import { useSocket } from "@/hooks/useSocket";
 
 const Home: React.FC = () => {
+    const { socket } = useSocket();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const handleRedirect = (gameId: string) => {
+            toast("Game Joined", {
+                classNames: {
+                    toast: "!bg-green-300",
+                },
+            });
+            navigate("/matchmaking/" + gameId);
+        };
+        socket.on("gameId", handleRedirect);
+        return () => {
+            socket.off("gameId", handleRedirect);
+        };
+    }, []);
     return (
         <div className="w-full h-full relative">
             <div className="absolute inset-0">
@@ -24,8 +44,15 @@ const Home: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-6 z-20">
-                    <Button variant={"secondary"}>Play With Friends</Button>
-                    <JoinGameButton />
+                    <JoinGameButton
+                        title="Play With Friends"
+                        withFriends
+                    />
+
+                    <JoinGameButton
+                        title="Solo Queue"
+                        withFriends={false}
+                    />
                 </div>
             </div>
         </div>

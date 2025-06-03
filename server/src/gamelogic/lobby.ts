@@ -6,7 +6,9 @@ import { Player } from "./player";
 const lobbyMap = singleton("lobby", () => new Map<string, GameState>());
 
 const timers = singleton("times", () => new Map<string, number>());
-const MATCHMAKINGTIME = 1000 * 8;
+const MATCHMAKINGTIME = 1000 * 15;
+
+const PRIVATE_MATCHTIME = 1000 * 60;
 
 setInterval(() => {
     for (const [gameId, timeStamp] of timers) {
@@ -17,20 +19,26 @@ setInterval(() => {
             timers.delete(gameId);
             continue;
         }
+        const time = gameState.isPrivate ? PRIVATE_MATCHTIME : MATCHMAKINGTIME;
 
-        if (now - timeStamp >= MATCHMAKINGTIME) {
+        if (now - timeStamp >= time) {
             gameState.startMatch();
             timers.delete(gameId);
-        } else if (gameState.isGameFull()) {
+        } else if (!gameState.isPrivate && gameState.isGameFull()) {
             gameState.startMatch();
             timers.delete(gameId);
         }
     }
 }, 5000);
 
-export function addPlayer(socket: SocketType, io: IOType, name: string) {
+export function addPlayer(
+    socket: SocketType,
+    io: IOType,
+    name: string,
+    isPrivate?: boolean
+) {
     if (lobbyMap.size === 0) {
-        const game = new GameState(io);
+        const game = new GameState(io, isPrivate ?? false);
         lobbyMap.set(game.getGameId(), game);
         const player = new Player(game, socket, 0, name);
 
@@ -44,7 +52,11 @@ export function addPlayer(socket: SocketType, io: IOType, name: string) {
     } else {
         // traverse
         for (const gameState of lobbyMap.values()) {
-            if (gameState.isGameFull() || gameState.isGameStarted()) {
+            if (
+                gameState.isGameFull() ||
+                gameState.isGameStarted() ||
+                gameState.isPrivate
+            ) {
                 continue;
             }
             const player = new Player(
@@ -63,7 +75,7 @@ export function addPlayer(socket: SocketType, io: IOType, name: string) {
         }
         // all games full
 
-        const game = new GameState(io);
+        const game = new GameState(io, isPrivate ?? false);
         lobbyMap.set(game.getGameId(), game);
         const player = new Player(game, socket, 0, name);
 
