@@ -5,7 +5,8 @@ import type { PlayerType } from "@/types";
 import { Button } from "./ui/button";
 import { Mic, MicOff, Send, X } from "lucide-react";
 import { Input } from "./ui/input";
-import { formatTime } from "@/lib/utils";
+import { cn, formatTime } from "@/lib/utils";
+import messageSound from "@/assets/message.mp3";
 
 type UseVoiceChatOptions = {
     otherPlayers: PlayerType[] | null;
@@ -99,6 +100,8 @@ export default function VoiceChatToggle({
     useEffect(() => {
         openRef.current = open;
     }, [open]);
+    const containerRef = useRef<HTMLDivElement>(null);
+
     const createPeer = useCallback(
         (
             peerId: string,
@@ -131,12 +134,16 @@ export default function VoiceChatToggle({
             });
             peer.on("data", (chunk: Uint8Array) => {
                 const message = JSON.parse(chunk.toString()) as Message;
+                const audio = new Audio(messageSound);
                 if (message) {
                     setMessages((prev) => [...prev, message]);
                 }
                 if (!openRef.current) {
                     setUnread((p) => p + 1);
+                } else {
+                    audio.volume = 0.5;
                 }
+                audio.play();
             });
             peer.on("error", (err) => {
                 console.error(`Peer ${peerId} error:`, err);
@@ -290,7 +297,11 @@ export default function VoiceChatToggle({
         createPeer,
         setupConnection,
     ]);
-
+    useEffect(() => {
+        if (containerRef.current) {
+            containerRef.current.scrollTop = containerRef.current.scrollHeight;
+        }
+    }, [messages]);
     return (
         <>
             <div className="fixed left-8 bottom-8 z-50">
@@ -313,9 +324,12 @@ export default function VoiceChatToggle({
             <div className="fixed right-8 bottom-8 z-50 drop-shadow-2xl">
                 {open ? (
                     <>
-                        <div className="empty:hidden w-sm h-full flex flex-col rounded p-2 gap-1 max-h-80 overflow-auto bg-background text-foreground">
+                        <div
+                            ref={containerRef}
+                            className="empty:hidden w-sm h-full flex flex-col rounded p-2 gap-1 max-h-80 overflow-auto bg-background text-foreground"
+                        >
                             <div
-                                className="ml-auto w-8 h-6 bg-foreground text-background cursor-pointer flex items-center justify-center rounded"
+                                className="ml-auto absolute -top-4 -right-2 w-7 h-7 bg-foreground text-background cursor-pointer flex items-center justify-center rounded"
                                 title="Close Chat Window"
                                 onClick={() => setOpen((p) => !p)}
                             >
@@ -324,11 +338,14 @@ export default function VoiceChatToggle({
                             {messages.map((message) => (
                                 <div
                                     key={message.timestamp}
-                                    className="bg-accent p-2 rounded"
+                                    className={cn(
+                                        message.from === "You"
+                                            ? "bg-accent"
+                                            : "bg-gray-300",
+                                        "p-2 rounded  text-accent-foreground"
+                                    )}
                                 >
-                                    <p className="text-accent-foreground">
-                                        {message.message}
-                                    </p>
+                                    <p className="">{message.message}</p>
                                     <div className="text-xs text-muted-foreground flex justify-between">
                                         <span className="">{message.from}</span>
                                         {formatTime(message.timestamp)}
@@ -355,6 +372,7 @@ export default function VoiceChatToggle({
                                     e.currentTarget.reset();
                                     return;
                                 }
+
                                 setMessages((p) => [
                                     ...p,
                                     {
@@ -385,6 +403,7 @@ export default function VoiceChatToggle({
                                     type="text"
                                     name="message"
                                     required
+                                    autoFocus
                                 />
                                 <Button
                                     size={"icon"}

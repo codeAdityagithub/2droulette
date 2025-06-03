@@ -16,7 +16,7 @@ import person4 from "../assets/person4.png";
 
 const playerImages = [person1, person2, person3, person4];
 const GameOverDialog = ({ winner }: { winner: PlayerType | null }) => {
-    const [open, setOpen] = useState(true);
+    const [open, setOpen] = useState(false);
     useEffect(() => {
         if (winner != null) {
             setOpen(true);

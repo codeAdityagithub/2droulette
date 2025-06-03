@@ -3,11 +3,6 @@ import title from "../assets/title.png";
 import bg from "../assets/bg.jpg";
 
 import JoinGameButton from "./JoinGameButton";
-import { useEffect, useState } from "react";
-import { useSocket } from "@/hooks/useSocket";
-import { useNavigate } from "react-router";
-import type { PlayerType } from "@/types";
-import GameOverDialog from "./GameOverDialog";
 
 const Home: React.FC = () => {
     return (
