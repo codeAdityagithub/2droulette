@@ -45,7 +45,7 @@ io.on("connection", (socket) => {
         }
 
         const gameState = getGameState(gameId);
-        if (gameState) {
+        if (gameState && gameState.isPrivate) {
             const player = new Player(
                 gameState,
                 socket,

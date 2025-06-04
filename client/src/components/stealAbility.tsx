@@ -102,6 +102,7 @@ const StealAbilityDialog = ({
                         Cancel
                     </DialogClose>
                     <DialogClose
+                        className="bg-primary text-primary-foreground p-2 rounded-md disabled:bg-muted disabled:text-muted-foreground"
                         disabled={ownerId === "" || abilityIndex == -1}
                         onClick={handleUse}
                     >

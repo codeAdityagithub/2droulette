@@ -28,7 +28,7 @@ export class Player implements Serializable {
         this.id = uuidv4();
         this.position = position;
         this.name = name;
-        this.lives = 2;
+        this.lives = 5;
     }
     public getId() {
         return this.id;
